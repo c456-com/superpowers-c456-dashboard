@@ -351,6 +351,7 @@ func (s *Server) scanDirHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, 400, "缺少 path")
 		return
 	}
+	in.Path = config.NormalizePath(in.Path) // 展开 ~、转绝对路径
 	if _, err := os.Stat(in.Path); err != nil {
 		writeJSONError(w, 400, "目录不存在: "+in.Path)
 		return
@@ -385,9 +386,22 @@ func (s *Server) scanDirHandler(w http.ResponseWriter, r *http.Request) {
 			s.scan.Current = dir
 			s.scanMu.Unlock()
 		})
+		// 收集已配置项目根目录，扫描结果排除已添加的
+		s.mu.RLock()
+		existing := map[string]bool{}
+		for _, p := range s.agg.Projects {
+			existing[p.Root] = true
+		}
+		s.mu.RUnlock()
+		filtered := make([]config.Discovered, 0, len(found))
+		for _, d := range found {
+			if !existing[d.Path] {
+				filtered = append(filtered, d)
+			}
+		}
 		s.scanMu.Lock()
-		s.scan.Found = make([]config.Discovered, len(found))
-		copy(s.scan.Found, found)
+		s.scan.Found = make([]config.Discovered, len(filtered))
+		copy(s.scan.Found, filtered)
 		s.scan.Current = ""
 		s.scanMu.Unlock()
 	}()

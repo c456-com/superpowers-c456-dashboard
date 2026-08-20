@@ -67,7 +67,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
             setScanning('')
             setBusy(false)
             setCandidates(st.found || [])
-            if ((st.found || []).length === 0) flash(true, '未发现 superpowers 项目（含 specs/plans/roadmap/sprint 文档的目录）')
+            if ((st.found || []).length === 0) flash(true, '没有新的可添加项目（已添加的项目已排除，或该目录无 superpowers 项目）')
             for (const f of st.found || []) {
               if (f.already) setCandidates((prev) => prev?.map((x) => (x.path === f.path ? { ...x, already: true } : x)) ?? null)
             }

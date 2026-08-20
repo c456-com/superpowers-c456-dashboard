@@ -99,6 +99,9 @@ func SaveSpecs(path string, specs []aggregate.ProjectSpec) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
+// NormalizePath 展开 ~ 并转绝对路径（供 API 输入路径规范化）。
+func NormalizePath(p string) string { return normalizePath(p) }
+
 // normalizePath 展开 ~ 并转绝对路径。
 func normalizePath(p string) string {
 	if strings.HasPrefix(p, "~/") {
