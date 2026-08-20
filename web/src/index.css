@@ -4,7 +4,7 @@
 @import "@fontsource-variable/roboto";
 @import "@fontsource-variable/space-grotesk";
 
-@custom-variant dark (&:is(.dark *));
+@plugin "@tailwindcss/typography";
 
 :root {
   --bg: #f7f7f8;
