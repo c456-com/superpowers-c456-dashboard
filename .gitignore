@@ -1,0 +1,11 @@
+# 构建产物
+/project-dash
+/project-dash-linux
+/project-dash.exe
+/dist/
+
+# 本地配置（含本地路径）
+projects.yaml
+
+# 系统
+.DS_Store

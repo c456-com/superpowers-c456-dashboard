@@ -1,0 +1,23 @@
+# 多项目开发监控面板配置
+# project-dash --config projects.yaml
+#
+# 相对 path 基于本配置文件所在目录解析。
+# 每个项目：扫描根目录顶层 *.md + 默认 docs/ 目录（递归），解析成结构化看板。
+
+projects:
+  - name: athena            # 展示名（可选，默认目录名）
+    path: ~/Codes/athena    # 项目根目录（必填，支持 ~）
+    type: 智慧标书          # 类型标签（可选，前端紫色标签）
+    status: 开发中           # 状态（可选：开发中/已上线/暂停 等）
+    dirs: [docs]            # 额外递归扫描的文档目录（默认 ["docs"]）
+    # exclude: [.worktrees] # 额外忽略的目录（可选）
+
+  - name: c456
+    path: ~/Codes/c456
+    type: 内容平台
+    status: 已上线
+
+  - name: baklib
+    path: ~/Codes/baklib
+    type: 数据底座
+    status: 开发中

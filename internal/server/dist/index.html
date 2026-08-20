@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多项目开发监控面板</title>
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#f7f7f8; --panel:#ffffff; --border:#e6e6e8; --ink:#1a1a1a;
+    --sub:#6b7280; --accent:#3b82f6; --accent-soft:#eff6ff;
+    --green:#16a34a; --amber:#d97706; --red:#dc2626; --violet:#7c3aed;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+  .top{position:sticky;top:0;z-index:50;background:var(--panel);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .top .brand{font-weight:700;font-size:16px;letter-spacing:.2px;white-space:nowrap}
+  .top .brand small{color:var(--sub);font-weight:400;margin-left:8px;font-size:12px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;display:inline-block;margin-right:5px}
+  .dot.live{background:var(--green);box-shadow:0 0 0 3px var(--accent-soft)}
+  .spacer{flex:1}
+  .meta{color:var(--sub);font-size:12px;white-space:nowrap}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.blue{background:var(--accent-soft);color:var(--accent)}
+  .pill.green{background:#ecfdf5;color:var(--green)}
+  .pill.amber{background:#fffbeb;color:var(--amber)}
+  .pill.violet{background:#f5f3ff;color:var(--violet)}
+  .layout{display:flex;min-height:calc(100vh - 57px)}
+  aside{width:240px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);padding:16px 12px;overflow:auto}
+  aside h4{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px}
+  aside h4:first-child{margin-top:0}
+  .nav-item{cursor:pointer;padding:7px 10px;border-radius:8px;color:var(--ink);font-weight:500;display:flex;align-items:center;gap:8px}
+  .nav-item:hover{background:#f0f0f2}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+  .nav-item .cnt{margin-left:auto;color:var(--sub);font-size:12px;background:#f0f0f2;border-radius:999px;padding:0 7px}
+  .doc-item{cursor:pointer;padding:6px 10px;border-radius:6px;font-size:13px;color:#374151;display:flex;align-items:center;gap:7px}
+  .doc-item:hover{background:#f3f4f6}
+  .doc-item .tp{font-size:10px;color:var(--sub);flex-shrink:0}
+  .doc-item .date{font-size:11px;color:#9ca3af;margin-left:auto;flex-shrink:0}
+  main{flex:1;padding:24px 28px;overflow:auto}
+  .view-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .view-head h2{font-size:20px;font-weight:700}
+  .view-head .desc{color:var(--sub);font-size:13px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .card .k{font-size:12px;color:var(--sub);margin-bottom:6px}
+  .card .v{font-size:26px;font-weight:700}
+  .card .v small{font-size:14px;color:var(--sub);font-weight:500;margin-left:4px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px}
+  .panel h3{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .group-title{font-size:13px;font-weight:700;color:var(--sub);margin:0 0 10px;text-transform:none;letter-spacing:0}
+  /* 项目卡片（总览） */
+  .prj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .prj-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .prj-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(59,130,246,.08)}
+  .prj-card .head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .prj-card .pn{font-weight:700;font-size:15px}
+  .prj-card .pt{font-size:11px;color:var(--sub)}
+  .prj-card .path{font-size:11px;color:#9ca3af;margin-bottom:10px;word-break:break-all}
+  .prj-card .prog{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .bar{height:6px;background:#eef0f2;border-radius:999px;overflow:hidden;flex:1;min-width:60px}
+  .bar>i{display:block;height:100%;background:var(--accent);border-radius:999px}
+  .prj-card .pct{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+  .prj-card .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .doc-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:13px 15px;cursor:pointer;transition:border-color .15s}
+  .doc-card:hover{border-color:var(--accent)}
+  .doc-card .t{font-weight:600;margin-bottom:5px;display:flex;gap:8px;align-items:center}
+  .doc-card .s{font-size:12px;color:var(--sub);max-height:40px;overflow:hidden}
+  .doc-card .d{font-size:11px;color:#9ca3af;margin-top:8px}
+  .mermaid-box{overflow:auto}
+  .task-group{margin-bottom:6px}
+  .task-head{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:6px}
+  .task-head .tt{font-weight:600}
+  .task-name{cursor:pointer;color:var(--sub);font-size:12px;margin-bottom:6px}
+  .task-name:hover{color:var(--accent)}
+  .tasks{list-style:none}
+  .tasks li{padding:3px 0;display:flex;gap:8px;align-items:flex-start;font-size:13px}
+  .tasks li input{margin-top:3px}
+  .tasks li.done{color:#9ca3af;text-decoration:line-through}
+  .empty{color:var(--sub);font-size:13px;padding:16px;text-align:center}
+  /* 详情抽屉 */
+  .drawer{position:fixed;top:0;right:0;height:100%;width:640px;max-width:92vw;background:var(--panel);box-shadow:-12px 0 40px rgba(0,0,0,.12);z-index:100;transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+  .drawer-head .x{cursor:pointer;color:var(--sub);font-size:20px;font-weight:300;border:none;background:none;padding:0 4px}
+  .drawer-head .x:hover{color:var(--ink)}
+  .drawer-title{font-weight:700;font-size:16px;margin-bottom:6px}
+  .drawer-meta{font-size:12px;color:var(--sub}
+  .drawer-body{flex:1;overflow:auto;padding:22px 26px}
+  .drawer-body h1{font-size:22px;margin:10px 0 16px}
+  .drawer-body h2{font-size:17px;margin:22px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+  .drawer-body h3{font-size:15px;margin:16px 0 8px}
+  .drawer-body pre{background:#f6f7f8;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
+  .drawer-body code{background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:12px}
+  .drawer-body blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--sub);margin:10px 0}
+  .drawer-body table{border-collapse:collapse;margin:10px 0;width:100%}
+  .drawer-body td,.drawer-body th{border:1px solid var(--border);padding:6px 9px;font-size:13px;text-align:left}
+  .drawer-body th{background:#fafafa}
+  .drawer-body ul,.drawer-body ol{padding-left:22px;margin:8px 0}
+  .drawer li{list-style:none;display:flex;gap:8px;padding:2px 0}
+  .type-tag{font-size:11px;padding:1px 7px;border-radius:5px;font-weight:600}
+  .t-spec{background:var(--accent-soft);color:var(--accent)}
+  .t-plan{background:#ecfdf5;color:var(--green)}
+  .t-sprint{background:#f5f3ff;color:var(--violet)}
+  .t-roadmap{background:#fffbeb;color:var(--amber)}
+  .t-research{background:#f0f0f2;color:#374151}
+  .t-doc{background:#f0f0f2;color:#374151}
+  .type-tag.spec{background:var(--accent-soft);color:var(--accent)}
+  .type-tag.plan{background:#ecfdf5;color:var(--green)}
+  .type-tag.sprint{background:#f5f3ff;color:var(--violet)}
+  .type-tag.roadmap{background:#fffbeb;color:var(--amber)}
+  .type-tag.research{background:#f0f0f2;color:#374151}
+  .project-bar{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .project-bar select{font-size:14px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--ink);cursor:pointer}
+  .project-bar .back{cursor:pointer;color:var(--accent);font-weight:500;font-size:13px;padding:6px 10px;border-radius:8px;background:var(--accent-soft)}
+  .project-bar .back:hover{background:#dbeafe}
+  .drawer-body{direction:ltr}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">🎛️ <span id="brandName">多项目开发监控</span><small id="projRoot"></small></div>
+  <span class="pill blue" id="compPill">…</span>
+  <div class="spacer"></div>
+  <div class="meta" id="genAt"></div>
+  <div class="meta"><span class="dot" id="sseDot" title="自动刷新连接"></span><span id="sseTxt">连接中</span></div>
+</header>
+<div class="layout">
+  <aside id="sidebar"></aside>
+  <main id="view"></main>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div style="flex:1">
+      <div class="drawer-title" id="dtTitle"></div>
+      <div class="drawer-meta" id="dtMeta"></div>
+    </div>
+    <button class="x" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="dtBody"></div>
+</div>
+
+<script>
+let DATA=null, activeView='projects', currentPrj=null, mmSeq=0;
+const TYPE= {spec:'功能设计', plan:'开发计划', sprint:'冲刺', roadmap:'路线图', research:'调研', doc:'文档'};
+const TCLASS={spec:'t-spec',plan:'t-plan',sprint:'t-sprint',roadmap:'t-roadmap',research:'t-research',doc:'t-doc'};
+
+mermaid.initialize({startOnLoad:false, securityLevel:'loose', theme:'base', fontFamily:'inherit',
+  themeVariables:{primaryColor:'#eff6ff',primaryBorderColor:'#3b82f6',primaryTextColor:'#1a1a1a',
+  lineColor:'#cbd5e1', fontSize:'13px'}});
+
+function prjById(id){ return DATA.projects.find(p=>p.name===id) || DATA.projects[0]; }
+
+async function loadData(){
+  const r=await fetch('/data'+'?t='+Date.now());
+  DATA=await r.json();
+  const n=DATA.total_projects||DATA.projects.length;
+  const g=(DATA.global_completion!=null)?DATA.global_completion:0;
+  document.getElementById('brandName').textContent=`多项目监控 · ${n} 个项目`;
+  document.getElementById('genAt').textContent='更新于 '+DATA.generated_at;
+  document.getElementById('compPill').textContent=`全局任务 ${DATA.global_tasks_done}/${DATA.global_tasks_total} · ${g}%`;
+  // 项目切换下拉（顶部）
+  renderProjectBar();
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function mLabel(s){
+  return String(s==null?'':s).replace(/\(/g,'#40;').replace(/\)/g,'#41;').replace(/\{/g,'#123;')
+    .replace(/\}/g,'#125;').replace(/\|/g,'#124;').replace(/\[/g,'#91;').replace(/\]/g,'#93;')
+    .replace(/:/g,'#58;').replace(/,/g,'#44;').replace(/"/g,'#34;');
+}
+function enc(p){return encodeURIComponent(p).replace(/'/g,"%27");}
+
+/* 顶部项目切换栏：仅进入具体项目后显示 */
+function renderProjectBar(){
+  const existing=document.getElementById('projectBar');
+  if(existing) existing.remove();
+  if(!currentPrj) return;
+  const bar=document.createElement('div');
+  bar.id='projectBar'; bar.className='project-bar';
+  bar.innerHTML=`<span class="back" onclick="goProjects()">← 全部项目</span>
+    <select id="prjSelect" onchange="switchPrj(this.value)"></select>
+    <span style="color:var(--sub);font-size:12px">${esc(currentPrj.root||'')}</span>`;
+  document.getElementById('view').parentNode.insertBefore(bar, document.getElementById('view'));
+  const sel=bar.querySelector('#prjSelect');
+  DATA.projects.forEach(p=>{
+    const o=document.createElement('option'); o.value=p.name; o.textContent=p.name+(p.status?' · '+p.status:'');
+    if(p.name===currentPrj.name) o.selected=true; sel.appendChild(o);
+  });
+}
+function switchPrj(name){ currentPrj=prjById(name); renderProjectBar(); activeView='overview'; renderView(); }
+
+/* ---------- 视图 ---------- */
+function typeGroup(docs,type){return (docs||[]).filter(d=>d.type===type).sort((a,b)=>(b.date||'').localeCompare(a.date||''));}
+
+function renderSidebar(){
+  const nav=[['overview','📊 总览'],['roadmap','🗺️ Roadmap'],['mindmap','🕸️ 功能图谱'],['gantt','📅 开发计划'],['tasks','✅ 任务清单']];
+  const docTypes=['spec','plan','sprint','roadmap','research','doc'];
+  let h='';
+  if(currentPrj) h+=`<div class="nav-item" onclick="goProjects()">← 全部项目</div>`;
+  nav.forEach(([k,l])=>{h+=`<div class="nav-item ${activeView===k?'active':''}" onclick="go('${k}')">${l}</div>`;});
+  if(currentPrj){
+    h+='<h4>文档索引</h4>';
+    docTypes.forEach(t=>{
+      const list=typeGroup(currentPrj.documents,t);
+      if(!list.length)return;
+      h+=`<div class="group-title">${TYPE[t]} <span style="color:#9ca3af">${list.length}</span></div>`;
+      list.forEach(d=>{h+=`<div class="doc-item" onclick="openDoc('${enc(d.path)}')"><span class="tp">${TYPE[d.type]}</span>${esc(short(d.title,14))}<span class="date">${d.date||''}</span></div>`;});
+    });
+  }
+  document.getElementById('sidebar').innerHTML=h;
+}
+function short(s,n){s=String(s||'');return s.length>n?s.slice(0,n)+'…':s;}
+
+async function renderView(){
+  const el=document.getElementById('view');
+  el.innerHTML='';
+  if(!currentPrj){
+    renderSidebar();
+    await vProjects(el);
+    return;
+  }
+  renderProjectBar();
+  renderSidebar();
+  if(activeView==='overview') await vOverview(el);
+  else if(activeView==='roadmap') await vRoadmap(el);
+  else if(activeView==='mindmap') await vMindmap(el);
+  else if(activeView==='gantt') await vGantt(el);
+  else if(activeView==='tasks') vTasks(el);
+}
+
+/* 全局总览：所有项目 */
+async function vProjects(el){
+  const projects=DATA.projects||[];
+  let h=`<div class="view-head"><h2>📁 全部项目</h2><span class="desc">点击进入单个项目 · 共 ${projects.length} 个</span></div>`;
+  if(!projects.length){h+='<div class="empty">未配置项目，请在 projects.yaml 里添加</div>';el.innerHTML=h;return;}
+  // 全局统计卡
+  const gc=[['项目数',projects.length,''],['文档总数',DATA.global_docs_total||0,'篇'],
+    ['全局任务',DATA.global_tasks_done+'/'+DATA.global_tasks_total,''],['全局完成率',DATA.global_completion||0,'%']];
+  h+=`<div class="cards">${gc.map(c=>`<div class="card"><div class="k">${c[0]}</div><div class="v">${c[1]}<small>${c[2]}</small></div></div>`).join('')}</div>`;
+  h+='<div class="prj-grid">'+projects.map(p=>{
+    const s=p.stats||{};
+    const tags=[]; if(p.type) tags.push(`<span class="pill violet">${esc(p.type)}</span>`);
+    if(p.status) tags.push(`<span class="pill ${p.status.includes('暂停')?'amber':'green'}">${esc(p.status)}</span>`);
+    return `<div class="prj-card" onclick="enterPrj('${enc(p.name)}')">
+      <div class="head"><span class="pn">${esc(p.name)}</span><span class="pt">${s.total_docs||0} 文档</span></div>
+      <div class="path">${esc(p.root||'')}</div>
+      <div class="prog"><span class="bar"><i style="width:${s.completion||0}%"></i></span><span class="pct">${s.completion||0}%</span></div>
+      <div style="color:var(--sub);font-size:12px;margin-bottom:8px">任务 ${s.tasks_done||0}/${s.tasks_total||0} · spec ${s.specs_total||0} · plan ${s.plans_total||0} · sprint ${s.sprints_total||0}</div>
+      <div class="tags">${tags.join('')}</div></div>`;
+  }).join('')+'</div>';
+  el.innerHTML=h;
+}
+function enterPrj(name){ currentPrj=prjById(name); activeView='overview'; renderView(); }
+function goProjects(){ currentPrj=null; activeView='projects'; renderView(); }
+
+/* 单项目 · 总览 */
+async function vOverview(el){
+  const s=currentPrj.stats;
+  const cards=[['文档总数',s.total_docs,'篇'],['功能设计',s.specs_total,'spec'],['开发计划',s.plans_total,'plan'],
+    ['冲刺',s.sprints_total,'sprint'],['路线图',s.roadmaps_total,''],['任务完成率',s.completion,'%']];
+  let h=`<div class="view-head"><h2>总览 · ${esc(currentPrj.name)}</h2><span class="desc">${esc(currentPrj.root||'')}</span></div>
+  <div class="cards">${cards.map(c=>`<div class="card"><div class="k">${c[0]}</div><div class="v">${c[1]}<small>${c[2]}</small></div></div>`).join('')}</div>`;
+  if((currentPrj.roadmap_stages||[]).length){
+    h+=`<div class="panel"><h3>🗺️ Roadmap</h3>`+
+       currentPrj.roadmap_stages.map(s=>`<div style="display:flex;gap:10px;padding:5px 0;align-items:baseline">`+
+       `<span class="pill blue">${esc(s.id)}</span><span style="font-weight:600">${esc(s.title)}</span>`+
+       `<span style="color:var(--sub);font-size:12px">${esc(s.desc||'').slice(0,70)}</span></div>`).join('')+`</div>`;
+  }
+  ['spec','plan','sprint','research'].forEach(t=>{
+    const list=typeGroup(currentPrj.documents,t);
+    if(!list.length)return;
+    h+=`<div class="panel"><h3>${TYPE[t]} <span class="pill blue">${list.length}</span></h3><div class="docs-grid">`+
+      list.map(d=>docCard(d)).join('')+`</div></div>`;
+  });
+  el.innerHTML=h;
+}
+function docCard(d){
+  return `<div class="doc-card" onclick="openDoc('${enc(d.path)}')">
+    <div class="t"><span class="type-tag ${TCLASS[d.type]}">${TYPE[d.type]}</span>${esc(d.title)}</div>
+    <div class="s">${esc(d.summary||'')}</div>
+    <div class="d">${d.date||'无日期'}${d.status?' · '+esc(d.status):''}${(d.tasks||[]).length?' · '+d.tasks.filter(x=>x.done).length+'/'+d.tasks.length+' 项':''}</div></div>`;
+}
+
+/* Roadmap 时间线 */
+async function vRoadmap(el){
+  let h=`<div class="view-head"><h2>🗺️ Roadmap 时间线</h2><span class="desc">${esc(currentPrj.name)} 开发阶段演进</span></div><div class="panel"><div class="mermaid-box" id="mm-roadmap"></div></div>`;
+  el.innerHTML=h;
+  const st=currentPrj.roadmap_stages||[];
+  if(!st.length){el.querySelector('#mm-roadmap').innerHTML='<div class="empty">未识别到 Roadmap 阶段（需 roadmap 文档含「阶段X」小节）</div>';return;}
+  let code=`timeline\n\ttitle ${mLabel(currentPrj.name)} 开发路线\n`;
+  st.forEach(s=>{code+=`\t${mLabel(s.id)} ${mLabel(s.title)}${s.desc?` : ${mLabel(s.desc).slice(0,60)}`:''}\n`;});
+  try{const {svg}=await mermaid.render('mm'+(mmSeq++),code);el.querySelector('#mm-roadmap').innerHTML=svg;}
+  catch(e){el.querySelector('#mm-roadmap').innerHTML='<div class="empty">timeline 渲染失败：'+esc(e.message)+'</div>';}
+}
+
+/* 功能图谱 */
+async function vMindmap(el){
+  let h=`<div class="view-head"><h2>🕸️ 功能设计图谱</h2><span class="desc">spec → 章节，点击节点查看功能详情</span></div><div class="panel"><div class="mermaid-box" id="mm-mind"></div></div>`;
+  el.innerHTML=h;
+  const specs=typeGroup(currentPrj.documents,'spec');
+  if(!specs.length){el.querySelector('#mm-mind').innerHTML='<div class="empty">暂无功能设计文档</div>';return;}
+  window.openDoc=function(p){openDoc(p);};
+  let code=`flowchart TD\n`;
+  code+=`\troot["${mLabel(currentPrj.name)} · 功能设计 (${specs.length})"]\n`;
+  specs.forEach((d,i)=>{
+    const n='s'+i;
+    const title=mLabel(d.title).slice(0,40);
+    code+=`\troot --> ${n}\n\t${n}["${title}"]\n`;
+    d.sections.slice(0,6).forEach((sec,j)=>{
+      const cn=n+'_'+j;
+      code+=`\t${n} --- ${cn}\n\t${cn}["${mLabel(sec.title).slice(0,24)}"]\n`;
+    });
+    code+=`\tclick ${n} call openDoc("${enc(d.path)}")\n`;
+  });
+  try{const {svg}=await mermaid.render('mm'+(mmSeq++),code);el.querySelector('#mm-mind').innerHTML=svg;}
+  catch(e){el.querySelector('#mm-mind').innerHTML='<div class="empty">图谱渲染失败：'+esc(e.message)+'</div>';}
+}
+
+/* 甘特图 */
+async function vGantt(el){
+  let h=`<div class="view-head"><h2>📅 开发计划 甘特图</h2><span class="desc">plan + sprint 时间安排</span></div><div class="panel"><div class="mermaid-box" id="mm-gantt"></div></div>`;
+  el.innerHTML=h;
+  const plans=[...typeGroup(currentPrj.documents,'plan'),...typeGroup(currentPrj.documents,'sprint')];
+  if(!plans.length){el.querySelector('#mm-gantt').innerHTML='<div class="empty">暂无开发计划文档</div>';return;}
+  const today=new Date().toISOString().slice(0,10);
+  let code=`gantt\n\ttitle ${mLabel(currentPrj.name)} 开发计划\n\tdateFormat YYYY-MM-DD\n\taxisFormat %m-%d\n`;
+  const sections={};
+  plans.forEach(d=>{const sec=d.type==='sprint'?'冲刺':'计划';(sections[sec]=sections[sec]||[]).push(d);});
+  let idx=0;
+  Object.keys(sections).forEach(sec=>{
+    code+=`\tsection ${mLabel(sec)}\n`;
+    sections[sec].forEach(d=>{
+      const dur=Math.max(1,Math.min(Math.round((d.tasks.length||1)*0.6),9));
+      const start=d.date||today;
+      const done=d.tasks.filter(t=>t.done).length;
+      code+=`\t${mLabel(d.title.slice(0,22))} [${done}/${d.tasks.length}] : t${idx++}, ${start}, ${dur}d\n`;
+    });
+  });
+  try{const {svg}=await mermaid.render('mm'+(mmSeq++),code);el.querySelector('#mm-gantt').innerHTML=svg;}
+  catch(e){el.querySelector('#mm-gantt').innerHTML='<div class="empty">甘特图渲染失败：'+esc(e.message)+'</div>';}
+}
+
+/* 任务清单 */
+function vTasks(el){
+  const docs=[...typeGroup(currentPrj.documents,'plan'),...typeGroup(currentPrj.documents,'sprint'),...typeGroup(currentPrj.documents,'spec')]
+    .filter(d=>(d.tasks||[]).length);
+  let h=`<div class="view-head"><h2>✅ 任务清单</h2><span class="desc">${esc(currentPrj.name)} 开发任务逐项进度（checkbox）</span></div>`;
+  if(!docs.length){h+='<div class="empty">暂无任务</div>';}
+  docs.forEach(d=>{
+    const done=d.tasks.filter(t=>t.done).length, pct=Math.round(done/d.tasks.length*100);
+    h+=`<div class="panel"><div class="task-head">
+      <span class="type-tag ${TCLASS[d.type]}">${TYPE[d.type]}</span>
+      <span class="tt" onclick="openDoc('${enc(d.path)}')" style="cursor:pointer">${esc(d.title)}</span>
+      <span style="color:var(--sub);font-size:12px">${d.date||''}</span>
+      <span class="bar"><i style="width:${pct}%"></i></span>
+      <span class="pill blue">${done}/${d.tasks.length}</span></div>`;
+    h+=`<ul class="tasks">`+d.tasks.map(t=>
+      `<li class="${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} disabled>${esc(t.text)}</li>`).join('')+`</ul></div>`;
+  });
+  el.innerHTML=h;
+}
+
+/* ---------- 导航 & 详情 ---------- */
+function go(v){activeView=v;render();if(location.hash!=='#'+v)location.hash=v;}
+function openDoc(p){
+  const path=decodeURIComponent(p);
+  const d=(currentPrj&&currentPrj.documents||[]).find(x=>x.path===path);
+  if(!d)return;
+  document.getElementById('dtTitle').textContent=d.title;
+  document.getElementById('dtMeta').innerHTML=
+    `<span class="type-tag ${TCLASS[d.type]}">${TYPE[d.type]}</span> &nbsp;${esc(path)} &nbsp; ${d.date||''}${d.status?' · '+esc(d.status):''}`;
+  document.getElementById('dtBody').innerHTML=marked.parse(d.content);
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+
+/* ---------- 启动 + SSE ---------- */
+async function boot(){
+  activeView='projects';
+  await loadData();
+  renderView();
+  const dot=document.getElementById('sseDot'),txt=document.getElementById('sseTxt');
+  try{
+    const es=new EventSource('/events');
+    es.onopen=()=>{dot.className='dot live';txt.textContent='自动刷新';};
+    es.onmessage=async e=>{ if(e.data==='refresh'){await loadData();renderView();} };
+    es.onerror=()=>{dot.className='dot';txt.textContent='重连中…';};
+  }catch(e){dot.className='dot';txt.textContent='无 SSE';setInterval(async()=>{await loadData();renderView();},10000);}
+}
+boot();
+</script>
+</body>
+</html>
