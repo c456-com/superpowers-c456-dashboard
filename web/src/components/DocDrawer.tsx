@@ -11,21 +11,25 @@ interface Props {
 export default function DocDrawer({ doc, onClose }: Props) {
   return (
     <Sheet open={!!doc} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-3xl! overflow-y-auto px-7" side="right">
+      <SheetContent className="w-full sm:max-w-3xl! px-7 flex flex-col" side="right">
         {doc && (
           <>
-            <SheetTitle className="text-base font-bold flex items-center gap-2 pr-8">
-              <TypeTag type={doc.type} />
-              {doc.title}
-            </SheetTitle>
-            <div className="text-xs text-muted-foreground mt-2 flex items-center gap-2 flex-wrap">
-              <span>{TYPE_LABEL[doc.type]}</span>
-              <span className="break-all">{doc.path}</span>
-              <span>{doc.date || ''}</span>
-              {doc.status ? ` · ${doc.status}` : ''}
+            {/* 固定头部（不随内容滚动） */}
+            <div className="shrink-0 border-b border-border pb-4">
+              <SheetTitle className="text-base font-bold flex items-center gap-2 pr-8">
+                <TypeTag type={doc.type} />
+                {doc.title}
+              </SheetTitle>
+              <div className="text-xs text-muted-foreground mt-2 flex items-center gap-2 flex-wrap">
+                <span>{TYPE_LABEL[doc.type]}</span>
+                <span className="break-all">{doc.path}</span>
+                <span>{doc.date || ''}</span>
+                {doc.status ? ` · ${doc.status}` : ''}
+              </div>
             </div>
+            {/* 正文独立滚动区 */}
             <div
-              className="markdown mt-4 px-1"
+              className="markdown mt-4 px-1 flex-1 overflow-y-auto"
               // 简单 markdown 渲染（完整渲染可选 marked/渲染库）
             >
               <RenderMd content={doc.content} />
