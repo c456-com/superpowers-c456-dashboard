@@ -32,7 +32,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
   const [openDoc, setOpenDoc] = useState<Document | null>(null)
 
   return (
-    <div className="flex h-[calc(100vh-53px)]">
+    <div className="flex h-[calc(100vh-56px)]">
       {/* 左侧：手风琴文档索引 */}
       <aside className="w-60 shrink-0 bg-white border-r border-border overflow-y-auto p-3">
         <Accordion defaultValue={['spec']}>
