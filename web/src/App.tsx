@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Settings2 } from 'lucide-react'
 import { fetchData, subscribeSSE } from './lib/api'
 import type { Project } from './lib/types'
 import ProjectBoard from './components/ProjectBoard'
 import ProjectDetail from './components/ProjectDetail'
 import Header from './components/Header'
 import ManagePanel from './components/ManagePanel'
-import { Button } from './components/ui/button'
 
 // hash 路由：`#/` 或空 = 首页多项目看板；`#/项目名` = 单项目（默认总览）；`#/项目名/视图`
 function parseHash(): { name: string | null; view: string } {
@@ -99,14 +97,7 @@ export default function App() {
               onViewChange={handleViewChange}
             />
           ) : (
-            <>
-              <div className="px-8 pt-4 flex justify-end">
-                <Button size="sm" variant="outline" onClick={() => setManageOpen(true)}>
-                  <Settings2 className="size-4 mr-1.5" /> 管理项目
-                </Button>
-              </div>
-              <ProjectBoard projects={data.projects} onEnter={(n) => navigate(n)} />
-            </>
+            <ProjectBoard projects={data.projects} onEnter={(n) => navigate(n)} />
           )
         )}
       </div>

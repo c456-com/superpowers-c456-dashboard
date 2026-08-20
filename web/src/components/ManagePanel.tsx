@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { Plus, Trash2, ScanSearch, FolderPlus } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 import { Button } from './ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog'
 import { addProject, removeProject, scanDir, type ScanCandidate } from '../lib/api'
 import type { Project } from '../lib/types'
 
@@ -20,6 +30,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
   const [candidates, setCandidates] = useState<ScanCandidate[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState<Project | null>(null)
 
   const flash = (ok: boolean, text: string) => setMsg({ ok, text })
 
@@ -67,7 +78,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
     }
   }
 
-  const handleRemove = async (name: string) => {
+  const doRemove = async (name: string) => {
     setBusy(true); setMsg(null)
     try {
       await removeProject(name)
@@ -77,6 +88,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
       flash(false, (e as Error).message)
     } finally {
       setBusy(false)
+      setConfirmRemove(null)
     }
   }
 
@@ -165,7 +177,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
                     size="sm"
                     variant="ghost"
                     className="text-destructive opacity-60 group-hover:opacity-100"
-                    onClick={() => handleRemove(p.name)}
+                    onClick={() => setConfirmRemove(p)}
                     disabled={busy}
                   >
                     <Trash2 className="size-4" />
@@ -182,6 +194,26 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
           </div>
         )}
       </SheetContent>
+
+      {/* 移除项目确认 */}
+      <AlertDialog open={!!confirmRemove} onOpenChange={(o) => !o && setConfirmRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认移除项目？</AlertDialogTitle>
+            <AlertDialogDescription>
+              将把「{confirmRemove?.name}」从监控面板移除（全局配置同步更新）。
+              <br />
+              <span className="block mt-1 text-xs text-muted-foreground break-all">{confirmRemove?.root}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmRemove && doRemove(confirmRemove.name)} disabled={busy}>
+              移除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   )
 }
