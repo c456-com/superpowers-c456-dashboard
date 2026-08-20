@@ -76,12 +76,18 @@ func LoadConfig(path string, overridePaths []string) (*Config, error) {
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("解析 %s: %w", path, err)
 	}
-	// 相对路径基于配置文件所在目录解析
+	// 相对路径基于配置文件所在目录解析；~ 展开为 HOME
 	base := filepath.Dir(path)
 	for i := range cfg.Projects {
-		if !filepath.IsAbs(cfg.Projects[i].Path) {
-			cfg.Projects[i].Path = filepath.Join(base, cfg.Projects[i].Path)
+		p := cfg.Projects[i].Path
+		if strings.HasPrefix(p, "~/") {
+			home, _ := os.UserHomeDir()
+			p = filepath.Join(home, p[2:])
 		}
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(base, p)
+		}
+		cfg.Projects[i].Path = p
 	}
 	return cfg, nil
 }
