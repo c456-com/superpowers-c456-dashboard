@@ -52,15 +52,15 @@ export default function Header({
             <span className="truncate">{currentProject.name}</span>
             <span className="sr-only">{currentProject.name}</span>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[440px]">
             {projects.map((p) => (
               <SelectItem key={p.name} value={p.name}>
-                <div className="flex flex-col leading-tight">
+                <div className="flex flex-col leading-tight w-full">
                   <span className="font-semibold text-[13px]">
                     {p.name}
                     {p.status ? <span className="text-muted-foreground font-normal"> · {p.status}</span> : null}
                   </span>
-                  <span className="text-[11px] text-muted-foreground truncate max-w-[260px]">{p.root}</span>
+                  <span className="text-[11px] text-muted-foreground truncate" title={p.root}>{p.root}</span>
                 </div>
               </SelectItem>
             ))}
