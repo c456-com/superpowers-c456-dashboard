@@ -11,11 +11,11 @@ interface Props {
 export default function DocDrawer({ doc, onClose }: Props) {
   return (
     <Sheet open={!!doc} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-3xl! px-7 flex flex-col" side="right">
+      <SheetContent className="w-full sm:max-w-3xl! flex flex-col p-0" side="right">
         {doc && (
           <>
-            {/* 固定头部（不随内容滚动） */}
-            <div className="shrink-0 border-b border-border pb-4">
+            {/* toolbar：独立 padding，固定顶部 */}
+            <div className="shrink-0 px-6 py-4 border-b border-border">
               <SheetTitle className="text-base font-bold flex items-center gap-2 pr-8">
                 <TypeTag type={doc.type} />
                 {doc.title}
@@ -27,9 +27,9 @@ export default function DocDrawer({ doc, onClose }: Props) {
                 {doc.status ? ` · ${doc.status}` : ''}
               </div>
             </div>
-            {/* 正文独立滚动区 */}
+            {/* content：独立滚动 + 上下左右 padding */}
             <div
-              className="markdown mt-4 px-1 flex-1 overflow-y-auto"
+              className="markdown flex-1 overflow-y-auto px-7 py-5"
               // 简单 markdown 渲染（完整渲染可选 marked/渲染库）
             >
               <RenderMd content={doc.content} />
