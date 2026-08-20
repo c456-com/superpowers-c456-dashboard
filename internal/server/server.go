@@ -46,11 +46,11 @@ type Server struct {
 
 // ScanState 目录扫描的实时运行状态。
 type ScanState struct {
-	Running   bool              `json:"running"`
-	Current   string            `json:"current"`    // 正在扫描的目录
-	Found     []config.Discovered `json:"found"`     // 已发现的候选
-	Done      bool              `json:"done"`
-	Error     string            `json:"error,omitempty"`
+	Running bool                `json:"running"`
+	Current string              `json:"current"` // 正在扫描的目录
+	Found   []config.Discovered `json:"found"`   // 已发现的候选
+	Done    bool                `json:"done"`
+	Error   string              `json:"error,omitempty"`
 }
 
 // New 创建服务并做首次扫描。
