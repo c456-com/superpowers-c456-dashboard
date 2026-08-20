@@ -13,7 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"project-dev-dashboard/internal/aggregate"
+	"superpowers-c456-dashboard/internal/aggregate"
+	"superpowers-c456-dashboard/internal/config"
 )
 
 //go:embed all:dist
@@ -24,8 +25,7 @@ type Config struct {
 	Port       int
 	Interval   int // watch 轮询秒数
 	NoWatch    bool
-	ConfigPath string
-	Overrides  []string // -p 参数指定的项目路径（跳过 projects.yaml 的 path）
+	ConfigPath string // 项目清单路径（默认全局配置路径）
 }
 
 // Server 服务状态。
@@ -42,16 +42,17 @@ type Server struct {
 
 // New 创建服务并做首次扫描。
 func New(cfg Config) (*Server, error) {
-	loaded, err := aggregate.LoadConfig(cfg.ConfigPath, cfg.Overrides)
-	if err != nil {
-		return nil, err
-	}
 	s := &Server{
 		cfg:        cfg,
 		configPath: cfg.ConfigPath,
 		clients:    map[chan string]struct{}{},
 	}
-	s.recompute(loaded)
+	specs, err := config.LoadSpecs(cfg.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+	_ = config.EnsureDir()
+	s.recompute(&aggregate.Config{Projects: specs})
 	return s, nil
 }
 
@@ -67,15 +68,20 @@ func (s *Server) recompute(cfg *aggregate.Config) {
 	s.sig = aggregate.CollectSignature(cfg)
 }
 
-// Reload 重新加载配置并重扫。
-func (s *Server) Reload() {
-	loaded, err := aggregate.LoadConfig(s.configPath, s.cfg.Overrides)
+// reloadFromDisk 从当前配置路径重读项目清单并重扫。
+func (s *Server) reloadFromDisk() {
+	specs, err := config.LoadSpecs(s.configPath)
 	if err != nil {
 		slog.Error("reload config", "err", err)
 		return
 	}
-	s.recompute(loaded)
+	s.recompute(&aggregate.Config{Projects: specs})
 	s.broadcast("refresh")
+}
+
+// Reload 重新加载配置并重扫。
+func (s *Server) Reload() {
+	s.reloadFromDisk()
 }
 
 // handler 主 HTTP 处理器。
@@ -99,6 +105,11 @@ func (s *Server) handler() http.Handler {
 	// /api/file：安全读取项目内文件（文档里的文件路径链接闭环）。
 	// 只允许读取「已配置项目根目录内」的文件（resolve 后校验前缀，防目录穿越）。
 	mux.HandleFunc("GET /api/file", s.fileHandler)
+
+	// 项目管理：添加/移除/扫描目录识别（写全局配置 → 重扫 → SSE 刷新）
+	mux.HandleFunc("POST /api/projects", s.addProjectHandler)
+	mux.HandleFunc("DELETE /api/projects/{name}", s.removeProjectHandler)
+	mux.HandleFunc("POST /api/scan-dir", s.scanDirHandler)
 
 	mux.HandleFunc("GET /events", s.sseHandler)
 
@@ -273,6 +284,152 @@ func writeJSONError(w http.ResponseWriter, code int, msg string) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
+// addProjectHandler 添加一个项目到全局配置（POST /api/projects {path, name?}）。
+func (s *Server) addProjectHandler(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Path string `json:"path"`
+		Name string `json:"name,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil || in.Path == "" {
+		writeJSONError(w, 400, "缺少 path")
+		return
+	}
+	if _, err := os.Stat(in.Path); err != nil {
+		writeJSONError(w, 400, "目录不存在或不可读: "+in.Path)
+		return
+	}
+	abs, _ := filepath.Abs(in.Path)
+	name := in.Name
+	if name == "" {
+		name = filepath.Base(abs)
+	}
+	spec := aggregate.ProjectSpec{Name: name, Path: abs, Type: "superpowers"}
+	if err := s.addSpec(spec); err != nil {
+		writeJSONError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, map[string]string{"ok": "added", "name": name})
+}
+
+// removeProjectHandler 从全局配置移除项目（DELETE /api/projects/{name}）。
+func (s *Server) removeProjectHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		writeJSONError(w, 400, "缺少项目名")
+		return
+	}
+	if err := s.removeSpec(name); err != nil {
+		writeJSONError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, map[string]string{"ok": "removed", "name": name})
+}
+
+// scanDirHandler 递归扫描目录识别 superpowers 项目，返回候选列表（不自动添加）。
+// POST /api/scan-dir {path, max_depth?} → {candidates:[{path,name,doc_count,already}]}
+func (s *Server) scanDirHandler(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Path     string `json:"path"`
+		MaxDepth int    `json:"max_depth,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil || in.Path == "" {
+		writeJSONError(w, 400, "缺少 path")
+		return
+	}
+	if _, err := os.Stat(in.Path); err != nil {
+		writeJSONError(w, 400, "目录不存在: "+in.Path)
+		return
+	}
+	depth := in.MaxDepth
+	if depth <= 0 {
+		depth = 3
+	}
+	found := config.ScanForProjects(in.Path, depth)
+	// 标记已在配置中的
+	s.mu.RLock()
+	existing := map[string]bool{}
+	for _, p := range s.agg.Projects {
+		existing[p.Root] = true
+	}
+	s.mu.RUnlock()
+	type cand struct {
+		Path     string `json:"path"`
+		Name     string `json:"name"`
+		DocCount int    `json:"doc_count"`
+		Already  bool   `json:"already"`
+	}
+	cands := make([]cand, 0, len(found))
+	for _, d := range found {
+		cands = append(cands, cand{d.Path, d.Name, d.DocCount, existing[d.Path]})
+	}
+	writeJSON(w, map[string]interface{}{"candidates": cands})
+}
+
+// addSpec 添加项目配置并持久化 + 重扫 + 广播。
+func (s *Server) addSpec(spec aggregate.ProjectSpec) error {
+	s.mu.RLock()
+	specs := s.specsSnapshot()
+	s.mu.RUnlock()
+	// 去重（按路径）
+	for _, ex := range specs {
+		if ex.Path == spec.Path {
+			return nil // 已存在
+		}
+	}
+	specs = append(specs, spec)
+	if err := config.SaveSpecs(s.configPath, specs); err != nil {
+		return err
+	}
+	_ = config.EnsureDir()
+	s.recompute(&aggregate.Config{Projects: specs})
+	s.broadcast("refresh")
+	return nil
+}
+
+// removeSpec 移除项目配置并持久化。
+func (s *Server) removeSpec(name string) error {
+	s.mu.RLock()
+	specs := s.specsSnapshot()
+	s.mu.RUnlock()
+	kept := specs[:0]
+	removed := false
+	for _, sp := range specs {
+		if sp.Name != name && sp.Path != name {
+			kept = append(kept, sp)
+		} else {
+			removed = true
+		}
+	}
+	if !removed {
+		return nil
+	}
+	if err := config.SaveSpecs(s.configPath, kept); err != nil {
+		return err
+	}
+	s.recompute(&aggregate.Config{Projects: kept})
+	s.broadcast("refresh")
+	return nil
+}
+
+// specsSnapshot 从当前聚合结果反推项目清单（避免额外读盘）。
+func (s *Server) specsSnapshot() []aggregate.ProjectSpec {
+	out := make([]aggregate.ProjectSpec, 0, len(s.agg.Projects))
+	for _, p := range s.agg.Projects {
+		out = append(out, aggregate.ProjectSpec{
+			Name:   p.Name,
+			Path:   p.Root,
+			Status: p.Status,
+			Type:   p.Type,
+		})
+	}
+	return out
+}
+
+func writeJSON(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(v)
+}
+
 // Watch 后台轮询文档签名变化，变化则重扫并广播。
 func (s *Server) Watch() {
 	if s.cfg.NoWatch {
@@ -285,12 +442,13 @@ func (s *Server) Watch() {
 	go func() {
 		for {
 			time.Sleep(interval)
-			// 配置可能包含覆盖路径，这里用跳过配置文件重载的方式只做重扫
-			loaded, err := aggregate.LoadConfig(s.configPath, s.cfg.Overrides)
+			// 重读配置清单 + 重扫
+			specs, err := config.LoadSpecs(s.configPath)
 			if err != nil {
 				slog.Error("watch load config", "err", err)
 				continue
 			}
+			loaded := &aggregate.Config{Projects: specs}
 			sig := aggregate.CollectSignature(loaded)
 			s.mu.RLock()
 			old := s.sig

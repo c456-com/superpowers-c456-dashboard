@@ -25,6 +25,45 @@ export async function fetchFile(project: string, path: string, dir?: string): Pr
   return data as FileContent
 }
 
+// 添加项目（POST /api/projects {path, name?}）
+export async function addProject(path: string, name?: string): Promise<string> {
+  const r = await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, name }),
+  })
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error((data as { error?: string }).error || ('添加失败 ' + r.status))
+  return (data as { name: string }).name
+}
+
+// 移除项目（DELETE /api/projects/{name}）
+export async function removeProject(name: string): Promise<void> {
+  const r = await fetch(`/api/projects/${encodeURIComponent(name)}`, { method: 'DELETE' })
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}))
+    throw new Error((data as { error?: string }).error || ('移除失败 ' + r.status))
+  }
+}
+
+// 扫描目录识别 superpowers 项目（POST /api/scan-dir {path, max_depth?}）
+export interface ScanCandidate {
+  path: string
+  name: string
+  doc_count: number
+  already: boolean
+}
+export async function scanDir(path: string): Promise<ScanCandidate[]> {
+  const r = await fetch('/api/scan-dir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, max_depth: 4 }),
+  })
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error((data as { error?: string }).error || ('扫描失败 ' + r.status))
+  return (data as { candidates: ScanCandidate[] }).candidates || []
+}
+
 // 防御性归一化：确保数组/对象字段非 null（后端曾因 nil slice 序列化为 null 导致前端崩）
 // 即使后端漏修，前端也不会因数据形状白屏。
 function normalize(agg: Aggregate): Aggregate {

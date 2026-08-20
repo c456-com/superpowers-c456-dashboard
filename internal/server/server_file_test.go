@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"project-dev-dashboard/internal/aggregate"
+	"superpowers-c456-dashboard/internal/aggregate"
 )
 
 // 构建一个带两个候选解析的文件服务，验证 dir（文档目录）解析 + 防目录穿越。

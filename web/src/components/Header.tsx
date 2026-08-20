@@ -1,4 +1,4 @@
-import { Activity } from 'lucide-react'
+import { Activity, Settings } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -16,6 +16,7 @@ interface Props {
   generatedAt: string
   onBack: () => void
   onSwitch: (name: string) => void
+  onManage: () => void
 }
 
 export default function Header({
@@ -27,6 +28,7 @@ export default function Header({
   generatedAt,
   onBack,
   onSwitch,
+  onManage,
 }: Props) {
   const inProject = !!currentProject
 
@@ -88,6 +90,14 @@ export default function Header({
         <span className="inline-block size-2 rounded-full bg-green-500" />
         自动刷新
       </div>
+      <button
+        type="button"
+        onClick={onManage}
+        className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted transition-colors whitespace-nowrap"
+        title="管理项目（添加 / 移除 / 扫描目录）"
+      >
+        <Settings className="size-3.5" /> 管理项目
+      </button>
     </header>
   )
 }

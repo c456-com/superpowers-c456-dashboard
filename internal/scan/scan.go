@@ -1,6 +1,6 @@
 // Package scan 扫描解析 superpowers 扁平 markdown 文档，生成结构化项目数据。
 //
-// 移植自 Python 版 project-dev-dashboard 的 scan.py，逻辑保持一致：
+// 移植自 Python 版 superpowers-c456-dashboard 的 scan.py，逻辑保持一致：
 //   - 类型判定：spec / plan / roadmap / sprint / research / doc
 //   - 日期：文件名前缀 YYYY-MM-DD，回退到引用块日期
 //   - 元数据：文件开头 `> ` 引用块里 `**键：**值`

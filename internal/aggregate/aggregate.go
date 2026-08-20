@@ -12,7 +12,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"project-dev-dashboard/internal/scan"
+	"superpowers-c456-dashboard/internal/scan"
 )
 
 // Config 顶层配置。

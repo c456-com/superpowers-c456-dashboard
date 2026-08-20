@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Settings2 } from 'lucide-react'
 import { fetchData, subscribeSSE } from './lib/api'
 import type { Project } from './lib/types'
 import ProjectBoard from './components/ProjectBoard'
 import ProjectDetail from './components/ProjectDetail'
 import Header from './components/Header'
+import ManagePanel from './components/ManagePanel'
+import { Button } from './components/ui/button'
 
 // hash 路由：`#/` 或空 = 首页多项目看板；`#/项目名` = 单项目（默认总览）；`#/项目名/视图`
 function parseHash(): { name: string | null; view: string } {
@@ -63,6 +66,15 @@ export default function App() {
   const handleViewChange = (v: string) => navigate(route.name, v)
   const handleBack = () => navigate(null)
 
+  const [manageOpen, setManageOpen] = useState(false)
+  const handleChanged = () => {
+    qc.invalidateQueries({ queryKey: ['aggregate'] })
+  }
+  const handleEnter = (name: string) => {
+    setManageOpen(false)
+    navigate(name)
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header
@@ -74,6 +86,7 @@ export default function App() {
         generatedAt={data?.generated_at ?? ''}
         onBack={handleBack}
         onSwitch={handleSwitch}
+        onManage={() => setManageOpen(true)}
       />
       <div className="flex-1">
         {isLoading && <div className="p-8 text-center text-muted-foreground">加载中…</div>}
@@ -86,10 +99,24 @@ export default function App() {
               onViewChange={handleViewChange}
             />
           ) : (
-            <ProjectBoard projects={data.projects} onEnter={(n) => navigate(n)} />
+            <>
+              <div className="px-8 pt-4 flex justify-end">
+                <Button size="sm" variant="outline" onClick={() => setManageOpen(true)}>
+                  <Settings2 className="size-4 mr-1.5" /> 管理项目
+                </Button>
+              </div>
+              <ProjectBoard projects={data.projects} onEnter={(n) => navigate(n)} />
+            </>
           )
         )}
       </div>
+      <ManagePanel
+        projects={data?.projects ?? []}
+        open={manageOpen}
+        onClose={() => setManageOpen(false)}
+        onChanged={handleChanged}
+        onEnter={handleEnter}
+      />
     </div>
   )
 }

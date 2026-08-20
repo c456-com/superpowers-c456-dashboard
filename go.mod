@@ -1,4 +1,4 @@
-module project-dev-dashboard
+module superpowers-c456-dashboard
 
 go 1.26.5
 
