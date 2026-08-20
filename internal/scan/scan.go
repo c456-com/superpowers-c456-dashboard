@@ -155,7 +155,7 @@ func parseDate(fname string, meta map[string]string) string {
 }
 
 func extractTasks(lines []string) []Task {
-	var tasks []Task
+	tasks := make([]Task, 0)
 	for _, ln := range lines {
 		m := taskRe.FindStringSubmatch(ln)
 		if m != nil {
@@ -169,7 +169,7 @@ func extractTasks(lines []string) []Task {
 }
 
 func extractSections(lines []string) []Section {
-	var sections []Section
+	sections := make([]Section, 0)
 	for _, ln := range lines {
 		m := sectionRe.FindStringSubmatch(ln)
 		if m != nil {
