@@ -48,7 +48,7 @@ export default function DocDrawer({ doc, onClose, projectName }: Props) {
                     components={{
                       pre: (props) => (
                         <pre
-                          className="text-[13px] leading-relaxed bg-muted/60 border border-border rounded-lg p-4 my-3 overflow-x-auto [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[13px] [&_code]:leading-relaxed"
+                          className="text-[13px] text-foreground leading-relaxed bg-muted/60 border border-border rounded-lg p-4 my-3 overflow-x-auto [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[13px] [&_code]:leading-relaxed [&_code]:text-foreground"
                           {...props}
                         />
                       ),
