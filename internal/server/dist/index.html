@@ -87,7 +87,7 @@
   .drawer-head .x{cursor:pointer;color:var(--sub);font-size:20px;font-weight:300;border:none;background:none;padding:0 4px}
   .drawer-head .x:hover{color:var(--ink)}
   .drawer-title{font-weight:700;font-size:16px;margin-bottom:6px}
-  .drawer-meta{font-size:12px;color:var(--sub}
+  .drawer-meta{font-size:12px;color:var(--sub)}
   .drawer-body{flex:1;overflow:auto;padding:22px 26px}
   .drawer-body h1{font-size:22px;margin:10px 0 16px}
   .drawer-body h2{font-size:17px;margin:22px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px}
@@ -364,7 +364,7 @@ function vTasks(el){
 }
 
 /* ---------- 导航 & 详情 ---------- */
-function go(v){activeView=v;render();if(location.hash!=='#'+v)location.hash=v;}
+function go(v){activeView=v;if(!currentPrj&&v!=='projects'&&DATA&&DATA.projects.length)currentPrj=DATA.projects[0];renderView();if(location.hash!=='#'+v)location.hash=v;}
 function openDoc(p){
   const path=decodeURIComponent(p);
   const d=(currentPrj&&currentPrj.documents||[]).find(x=>x.path===path);
