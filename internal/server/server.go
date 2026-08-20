@@ -4,6 +4,7 @@ package server
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,18 @@ type Server struct {
 	clients      map[chan string]struct{}
 	clientsMu    sync.Mutex
 	configPath   string
+
+	scanMu sync.Mutex
+	scan   ScanState // 目录扫描运行状态（前端展示实时进度）
+}
+
+// ScanState 目录扫描的实时运行状态。
+type ScanState struct {
+	Running   bool              `json:"running"`
+	Current   string            `json:"current"`    // 正在扫描的目录
+	Found     []config.Discovered `json:"found"`     // 已发现的候选
+	Done      bool              `json:"done"`
+	Error     string            `json:"error,omitempty"`
 }
 
 // New 创建服务并做首次扫描。
@@ -110,6 +123,7 @@ func (s *Server) handler() http.Handler {
 	mux.HandleFunc("POST /api/projects", s.addProjectHandler)
 	mux.HandleFunc("DELETE /api/projects/{name}", s.removeProjectHandler)
 	mux.HandleFunc("POST /api/scan-dir", s.scanDirHandler)
+	mux.HandleFunc("GET /api/scan/status", s.scanStatusHandler)
 
 	mux.HandleFunc("GET /events", s.sseHandler)
 
@@ -325,8 +339,9 @@ func (s *Server) removeProjectHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]string{"ok": "removed", "name": name})
 }
 
-// scanDirHandler 递归扫描目录识别 superpowers 项目，返回候选列表（不自动添加）。
-// POST /api/scan-dir {path, max_depth?} → {candidates:[{path,name,doc_count,already}]}
+// scanDirHandler 异步递归扫描目录识别 superpowers 项目（不自动添加）。
+// POST /api/scan-dir {path, max_depth?} → 立即返回 {started:true}；
+// 扫描状态经 GET /api/scan/status 轮询（running/current/found/done）。
 func (s *Server) scanDirHandler(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Path     string `json:"path"`
@@ -344,25 +359,48 @@ func (s *Server) scanDirHandler(w http.ResponseWriter, r *http.Request) {
 	if depth <= 0 {
 		depth = 3
 	}
-	found := config.ScanForProjects(in.Path, depth)
-	// 标记已在配置中的
-	s.mu.RLock()
-	existing := map[string]bool{}
-	for _, p := range s.agg.Projects {
-		existing[p.Root] = true
+
+	s.scanMu.Lock()
+	if s.scan.Running {
+		s.scanMu.Unlock()
+		writeJSONError(w, 409, "已有扫描任务进行中")
+		return
 	}
-	s.mu.RUnlock()
-	type cand struct {
-		Path     string `json:"path"`
-		Name     string `json:"name"`
-		DocCount int    `json:"doc_count"`
-		Already  bool   `json:"already"`
-	}
-	cands := make([]cand, 0, len(found))
-	for _, d := range found {
-		cands = append(cands, cand{d.Path, d.Name, d.DocCount, existing[d.Path]})
-	}
-	writeJSON(w, map[string]interface{}{"candidates": cands})
+	s.scan = ScanState{Running: true, Current: in.Path, Found: []config.Discovered{}}
+	s.scanMu.Unlock()
+
+	go func() {
+		root := in.Path
+		defer func() {
+			s.scanMu.Lock()
+			s.scan.Running = false
+			s.scan.Done = true
+			if rec := recover(); rec != nil {
+				s.scan.Error = "扫描异常: " + fmt.Sprint(rec)
+			}
+			s.scanMu.Unlock()
+		}()
+		found := config.ScanForProjects(root, depth, func(dir string) {
+			s.scanMu.Lock()
+			s.scan.Current = dir
+			s.scanMu.Unlock()
+		})
+		s.scanMu.Lock()
+		s.scan.Found = make([]config.Discovered, len(found))
+		copy(s.scan.Found, found)
+		s.scan.Current = ""
+		s.scanMu.Unlock()
+	}()
+
+	writeJSON(w, map[string]bool{"started": true})
+}
+
+// scanStatusHandler 返回目录扫描实时状态（GET /api/scan/status）。
+func (s *Server) scanStatusHandler(w http.ResponseWriter, r *http.Request) {
+	s.scanMu.Lock()
+	state := s.scan
+	s.scanMu.Unlock()
+	writeJSON(w, state)
 }
 
 // addSpec 添加项目配置并持久化 + 重扫 + 广播。

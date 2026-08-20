@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog'
-import { addProject, removeProject, scanDir, type ScanCandidate } from '../lib/api'
+import { addProject, removeProject, startScan, scanStatus, type ScanCandidate } from '../lib/api'
 import type { Project } from '../lib/types'
 
 interface Props {
@@ -28,6 +28,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
   const [addName, setAddName] = useState('')
   const [scanPath, setScanPath] = useState('')
   const [candidates, setCandidates] = useState<ScanCandidate[] | null>(null)
+  const [scanning, setScanning] = useState('') // 正在扫描的目录（实时进度）
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<Project | null>(null)
@@ -51,15 +52,34 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
 
   const handleScan = async () => {
     if (!scanPath.trim()) return
-    setBusy(true); setMsg(null); setCandidates(null)
+    setBusy(true); setMsg(null); setCandidates(null); setScanning('')
     try {
-      const c = await scanDir(scanPath.trim())
-      if (c.length === 0) { flash(true, '未发现 superpowers 项目（含 specs/plans/roadmap/sprint 文档的目录）'); setCandidates([]) }
-      else setCandidates(c)
+      await startScan(scanPath.trim())
+      // 轮询扫描状态，显示正在扫描的目录
+      const poll = setInterval(async () => {
+        try {
+          const st = await scanStatus()
+          if (st.running) {
+            setScanning(st.current)
+            if (st.found && st.found.length) setCandidates(st.found)
+          } else if (st.done) {
+            clearInterval(poll)
+            setScanning('')
+            setBusy(false)
+            setCandidates(st.found || [])
+            if ((st.found || []).length === 0) flash(true, '未发现 superpowers 项目（含 specs/plans/roadmap/sprint 文档的目录）')
+            for (const f of st.found || []) {
+              if (f.already) setCandidates((prev) => prev?.map((x) => (x.path === f.path ? { ...x, already: true } : x)) ?? null)
+            }
+          }
+        } catch (e) {
+          clearInterval(poll); setBusy(false); setScanning('')
+          flash(false, (e as Error).message)
+        }
+      }, 500)
     } catch (e) {
+      setScanning(''); setBusy(false)
       flash(false, (e as Error).message); setCandidates([])
-    } finally {
-      setBusy(false)
     }
   }
 
@@ -113,8 +133,18 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
                 placeholder="输入目录绝对路径，如 ~/Codes"
                 className="flex-1 h-9 rounded-md border border-input bg-transparent px-3 text-sm"
               />
-              <Button size="sm" onClick={handleScan} disabled={busy || !scanPath.trim()}>扫描</Button>
+              <Button size="sm" onClick={handleScan} disabled={busy || scanning !== '' || !scanPath.trim()}>扫描</Button>
             </div>
+            {/* 实时扫描进度：正在扫描哪些目录 */}
+            {scanning !== '' && (
+              <div className="mt-2.5 flex items-start gap-2 text-xs text-muted-foreground">
+                <span className="mt-0.5 inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground">正在扫描…</div>
+                  <div className="truncate font-mono mt-0.5" title={scanning}>{scanning}</div>
+                </div>
+              </div>
+            )}
             {candidates && (
               <div className="mt-3 flex flex-col gap-2">
                 {candidates.length === 0 && <div className="text-xs text-muted-foreground">没有匹配结果</div>}

@@ -46,14 +46,21 @@ export async function removeProject(name: string): Promise<void> {
   }
 }
 
-// 扫描目录识别 superpowers 项目（POST /api/scan-dir {path, max_depth?}）
+// 扫描目录识别 superpowers 项目（POST /api/scan-dir {path, max_depth?}）→ 启动异步扫描
 export interface ScanCandidate {
   path: string
   name: string
   doc_count: number
   already: boolean
 }
-export async function scanDir(path: string): Promise<ScanCandidate[]> {
+export interface ScanState {
+  running: boolean
+  current: string
+  found: ScanCandidate[]
+  done: boolean
+  error?: string
+}
+export async function startScan(path: string): Promise<void> {
   const r = await fetch('/api/scan-dir', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -61,7 +68,13 @@ export async function scanDir(path: string): Promise<ScanCandidate[]> {
   })
   const data = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error((data as { error?: string }).error || ('扫描失败 ' + r.status))
-  return (data as { candidates: ScanCandidate[] }).candidates || []
+}
+// 轮询扫描状态（GET /api/scan/status）
+export async function scanStatus(): Promise<ScanState> {
+  const r = await fetch('/api/scan/status')
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error('获取扫描状态失败 ' + r.status)
+  return data as ScanState
 }
 
 // 防御性归一化：确保数组/对象字段非 null（后端曾因 nil slice 序列化为 null 导致前端崩）

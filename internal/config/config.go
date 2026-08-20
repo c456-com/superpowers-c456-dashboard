@@ -123,10 +123,15 @@ type Discovered struct {
 // ScanForProjects 递归扫描 root 目录，识别「看起来像 superpowers 项目」的子目录。
 // 识别特征：目录内存在 *_spec/*_plan/roadmap/sprint 等 superpowers 文档，或 docs/superpowers 结构。
 // maxDepth 限制递归深度（防深挖失控）；返回候选列表（已排序）。
-func ScanForProjects(root string, maxDepth int) []Discovered {
+// onVisit 可选回调：每访问一个目录时调用（用于前端实时显示扫描进度）。
+func ScanForProjects(root string, maxDepth int, onVisit ...func(dir string)) []Discovered {
 	rootAbs, err := filepath.Abs(root)
 	if err != nil {
 		return nil
+	}
+	var visit func(string)
+	if len(onVisit) > 0 && onVisit[0] != nil {
+		visit = onVisit[0]
 	}
 	var out []Discovered
 	seen := map[string]bool{}
@@ -134,6 +139,9 @@ func ScanForProjects(root string, maxDepth int) []Discovered {
 	filepath.WalkDir(rootAbs, func(p string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil // 跳过不可读
+		}
+		if visit != nil {
+			visit(p)
 		}
 		if !d.IsDir() || p == rootAbs {
 			return nil
