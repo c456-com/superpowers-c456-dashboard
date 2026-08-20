@@ -7,6 +7,9 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,13 +30,14 @@ type Config struct {
 
 // Server 服务状态。
 type Server struct {
-	cfg        Config
-	agg        *aggregate.Aggregate
-	sig        map[string]map[string]int64
-	mu         sync.RWMutex
-	clients    map[chan string]struct{}
-	clientsMu  sync.Mutex
-	configPath string
+	cfg          Config
+	agg          *aggregate.Aggregate
+	projectRoots map[string]string // 项目名 → 根目录（file API 用）
+	sig          map[string]map[string]int64
+	mu           sync.RWMutex
+	clients      map[chan string]struct{}
+	clientsMu    sync.Mutex
+	configPath   string
 }
 
 // New 创建服务并做首次扫描。
@@ -56,6 +60,10 @@ func (s *Server) recompute(cfg *aggregate.Config) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.agg = aggregate.ScanAll(cfg)
+	s.projectRoots = map[string]string{}
+	for _, p := range cfg.Projects {
+		s.projectRoots[p.Name] = p.Path
+	}
 	s.sig = aggregate.CollectSignature(cfg)
 }
 
@@ -87,6 +95,10 @@ func (s *Server) handler() http.Handler {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Write([]byte(`{"ok":true}`))
 	})
+
+	// /api/file：安全读取项目内文件（文档里的文件路径链接闭环）。
+	// 只允许读取「已配置项目根目录内」的文件（resolve 后校验前缀，防目录穿越）。
+	mux.HandleFunc("GET /api/file", s.fileHandler)
 
 	mux.HandleFunc("GET /events", s.sseHandler)
 
@@ -166,6 +178,99 @@ func (s *Server) broadcast(msg string) {
 		default:
 		}
 	}
+}
+
+// fileHandler 安全读取项目内文件（文档里文件路径链接闭环）。
+// 请求：GET /api/file?project=<项目名>&path=<项目根内相对路径>[&dir=<文档所在目录>]
+// dir 可选：markdown 相对链接语义是相对文档所在目录；先试 root/dir/path，再退回 root/path。
+// 安全：resolve 后必须落在该项目根目录内，否则拒绝（防目录穿越）。
+func (s *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
+	project := r.URL.Query().Get("project")
+	rel := r.URL.Query().Get("path")
+	dir := r.URL.Query().Get("dir") // 文档所在目录（相对项目根，如 docs）
+	if project == "" || rel == "" {
+		writeJSONError(w, 400, "缺少 project 或 path 参数")
+		return
+	}
+	s.mu.RLock()
+	root, ok := s.projectRoots[project]
+	s.mu.RUnlock()
+	if !ok {
+		writeJSONError(w, 404, "未知项目: "+project)
+		return
+	}
+	rootAbs, _ := filepath.Abs(root)
+
+	resolve := func(rel string) (string, bool) {
+		abs, err := filepath.Abs(filepath.Join(rootAbs, rel))
+		if err != nil {
+			return "", false
+		}
+		// 防目录穿越：abs 必须在 rootAbs 内
+		relChk, err := filepath.Rel(rootAbs, abs)
+		if err != nil || relChk == ".." || strings.HasPrefix(relChk, ".."+string(filepath.Separator)) {
+			return "", false
+		}
+		return abs, true
+	}
+
+	// 候选取绝对路径：优先 root/dir/rel（markdown 相对文档目录），再退回 root/rel（相对项目根）
+	// 逐个尝试，文件实际存在读取成功才用（dir 版本文件不存在时自动落到根版本）
+	var abs string
+	anyInside := false // 是否有候选解析到项目根内（用于区分 404 与 400）
+	candidates := []string{rel}
+	if dir != "" && dir != "." {
+		candidates = []string{filepath.Join(dir, rel), rel}
+	}
+	read := func(s string) ([]byte, bool) {
+		a, ok := resolve(s)
+		if !ok {
+			return nil, false
+		}
+		anyInside = true
+		d, err := os.ReadFile(a)
+		if err != nil {
+			return nil, false
+		}
+		abs = a
+		return d, true
+	}
+	var data []byte
+	var found bool
+	for _, c := range candidates {
+		if d, ok := read(c); ok {
+			data, found = d, true
+			break
+		}
+	}
+	if !found {
+		// 有候选在根内（只是不存在）→ 404；全部越界 → 400
+		if anyInside {
+			writeJSONError(w, 404, "文件不存在: "+rel)
+		} else {
+			writeJSONError(w, 400, "路径超出项目根目录")
+		}
+		return
+	}
+	// 限制文件大小（防意外大文件），默认 1MB
+	if len(data) > 1<<20 {
+		writeJSONError(w, 413, "文件过大(>1MB)，仅支持查看小文件")
+		return
+	}
+	resp := map[string]string{
+		"project": project,
+		"path":    rel,
+		"abs":     abs,
+		"content": string(data),
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func writeJSONError(w http.ResponseWriter, code int, msg string) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
 // Watch 后台轮询文档签名变化，变化则重扫并广播。

@@ -8,6 +8,23 @@ export async function fetchData(): Promise<Aggregate> {
   return normalize(raw)
 }
 
+// 读取项目内文件（文档里文件路径链接闭环）。
+export interface FileContent {
+  project: string
+  path: string
+  abs: string
+  content: string
+}
+
+export async function fetchFile(project: string, path: string, dir?: string): Promise<FileContent> {
+  const q = new URLSearchParams({ project, path })
+  if (dir) q.set('dir', dir)
+  const r = await fetch(`/api/file?${q.toString()}`)
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error((data as { error?: string }).error || ('读取失败 ' + r.status))
+  return data as FileContent
+}
+
 // 防御性归一化：确保数组/对象字段非 null（后端曾因 nil slice 序列化为 null 导致前端崩）
 // 即使后端漏修，前端也不会因数据形状白屏。
 function normalize(agg: Aggregate): Aggregate {

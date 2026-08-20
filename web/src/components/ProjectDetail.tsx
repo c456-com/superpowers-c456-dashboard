@@ -91,7 +91,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
         {view === 'tasks' && <TasksView project={project} onOpen={setOpenDoc} />}
       </main>
 
-      <DocDrawer doc={openDoc} onClose={() => setOpenDoc(null)} />
+      <DocDrawer doc={openDoc} onClose={() => setOpenDoc(null)} projectName={project.name} />
     </div>
   )
 }
