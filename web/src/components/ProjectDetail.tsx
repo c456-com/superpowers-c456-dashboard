@@ -1,18 +1,10 @@
 import { useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select'
 import { DOC_TYPES, TYPE_LABEL } from '../lib/types'
 import type { Document, Project } from '../lib/types'
 import DocDrawer from './DocDrawer'
@@ -24,9 +16,6 @@ import TasksView from './views/TasksView'
 
 interface Props {
   project: Project
-  projects: Project[]
-  onBack: () => void
-  onSwitch: (name: string) => void
 }
 
 const VIEW_TABS: [string, string][] = [
@@ -37,7 +26,7 @@ const VIEW_TABS: [string, string][] = [
   ['tasks', '✅ 任务清单'],
 ]
 
-export default function ProjectDetail({ project, projects, onBack, onSwitch }: Props) {
+export default function ProjectDetail({ project }: Props) {
   const [view, setView] = useState('overview')
   const [openDoc, setOpenDoc] = useState<Document | null>(null)
 
@@ -77,29 +66,6 @@ export default function ProjectDetail({ project, projects, onBack, onSwitch }: P
 
       {/* 主区 */}
       <main className="flex-1 overflow-y-auto p-5 min-w-0">
-        {/* 顶部切换条 */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1 text-[13px] font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-1.5"
-          >
-            <ArrowLeft className="size-3.5" /> 全部项目
-          </button>
-          <Select value={project.name} onValueChange={(v) => v && onSwitch(v)}>
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((p) => (
-                <SelectItem key={p.name} value={p.name}>
-                  {p.name}{p.status ? ` · ${p.status}` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-xs text-muted-foreground break-all flex-1">{project.root}</span>
-        </div>
-
         {/* 视图页签 */}
         <div className="flex gap-1.5 mb-4 flex-wrap">
           {VIEW_TABS.map(([k, label]) => (

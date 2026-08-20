@@ -34,11 +34,14 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header
-        total={data?.total_projects ?? 0}
+        projects={data?.projects ?? []}
+        currentProject={curProject ?? null}
         globalDone={data?.global_tasks_done ?? 0}
         globalTotal={data?.global_tasks_total ?? 0}
         globalCompletion={data?.global_completion ?? 0}
         generatedAt={data?.generated_at ?? ''}
+        onBack={() => setCurName(null)}
+        onSwitch={setCurName}
       />
       <div className="flex-1">
         {isLoading && <div className="p-8 text-center text-muted-foreground">加载中…</div>}
@@ -47,9 +50,6 @@ export default function App() {
           curProject ? (
             <ProjectDetail
               project={curProject}
-              projects={data.projects}
-              onBack={() => setCurName(null)}
-              onSwitch={setCurName}
             />
           ) : (
             <ProjectBoard projects={data.projects} onEnter={setCurName} />
