@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import hljs from 'highlight.js/lib/common'
+import 'highlight.js/styles/github.css'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 import { fetchFile, type FileContent } from '../lib/api'
 
@@ -27,6 +29,28 @@ export default function FileViewer({ project, path, dir, onClose }: Props) {
   // 标题取路径最后一段
   const filename = path ? path.split('/').pop() : ''
 
+  // 根据扩展名高亮（ruby/go/yml/json/erb/md → hljs 语言类）
+  const highlighted = useMemo(() => {
+    if (!data) return ''
+    const ext = (filename || '').toLowerCase()
+    const lang =
+      ext.endsWith('.rb') || ext.endsWith('.erb') ? 'ruby'
+      : ext.endsWith('.go') ? 'go'
+      : ext.endsWith('.yml') || ext.endsWith('.yaml') ? 'yaml'
+      : ext.endsWith('.json') ? 'json'
+      : ext.endsWith('.md') ? 'markdown'
+      : ext.endsWith('.tf') ? 'hcl'
+      : ext.endsWith('.html') ? 'xml'
+      : ext.endsWith('.css') ? 'css'
+      : ext.endsWith('.js') || ext.endsWith('.ts') ? 'typescript'
+      : ''
+    try {
+      return lang && hljs.getLanguage(lang) ? hljs.highlight(data.content, { language: lang }).value : data.content
+    } catch {
+      return data.content
+    }
+  }, [data, filename])
+
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-3xl! flex flex-col p-0" side="right">
@@ -41,8 +65,11 @@ export default function FileViewer({ project, path, dir, onClose }: Props) {
           {error && <div className="text-destructive text-sm">{error}</div>}
           {!data && !error && <div className="text-muted-foreground text-sm">加载中…</div>}
           {data && (
-            <pre className="text-[12px] leading-relaxed whitespace-pre-wrap break-words bg-gray-50 p-3 rounded-lg overflow-x-auto">
-              <code>{data.content}</code>
+            <pre className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-gray-50 p-4 rounded-lg border border-gray-200 overflow-x-auto">
+              <code
+                className="hljs text-[13px] leading-relaxed bg-transparent p-0"
+                dangerouslySetInnerHTML={{ __html: highlighted }}
+              />
             </pre>
           )}
         </div>

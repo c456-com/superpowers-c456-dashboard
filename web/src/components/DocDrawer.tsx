@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import 'highlight.js/styles/github.css'
 import type { Document } from '../lib/types'
 import { TYPE_LABEL } from '../lib/types'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
@@ -42,7 +44,14 @@ export default function DocDrawer({ doc, onClose, projectName }: Props) {
                 <article className="prose prose-sm prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-headings:mt-6 prose-headings:mb-3 prose-p:my-2 prose-li:my-0.5 prose-pre:bg-gray-50 prose-pre:p-3 prose-blockquote:border-l-2 prose-blockquote:border-gray-300 prose-blockquote:pl-3 prose-blockquote:text-gray-600 prose-a:text-blue-600 prose-table:border prose-table:border-gray-200 prose-th:bg-gray-50 prose-th:p-2 prose-td:p-2">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight]}
                     components={{
+                      pre: (props) => (
+                        <pre
+                          className="text-[13px] leading-relaxed bg-gray-50 border border-gray-200 rounded-lg p-4 my-3 overflow-x-auto [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[13px] [&_code]:leading-relaxed"
+                          {...props}
+                        />
+                      ),
                       a: ({ href, children }) => {
                         // 相对路径链接（文档里的文件路径）→ 点击打开文件预览，不跳转
                         if (href && projectName && !/^(https?:|mailto:|#|\/|\?)/.test(href)) {
