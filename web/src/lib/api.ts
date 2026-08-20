@@ -1,10 +1,35 @@
 // API 层：拉取 /data，用 TanStack Query 缓存；提供 SSE 订阅触发失效
-import type { Aggregate } from './types'
+import type { Aggregate, Document, Project } from './types'
 
 export async function fetchData(): Promise<Aggregate> {
   const r = await fetch('/data?t=' + Date.now())
   if (!r.ok) throw new Error('获取数据失败 ' + r.status)
-  return r.json()
+  const raw = (await r.json()) as Aggregate
+  return normalize(raw)
+}
+
+// 防御性归一化：确保数组/对象字段非 null（后端曾因 nil slice 序列化为 null 导致前端崩）
+// 即使后端漏修，前端也不会因数据形状白屏。
+function normalize(agg: Aggregate): Aggregate {
+  for (const p of agg.projects as (Omit<Project, 'documents' | 'roadmap_stages'> & {
+    documents?: Document[] | null
+    roadmap_stages?: Project['roadmap_stages'] | null
+    stats?: Project['stats'] | null
+  })[]) {
+    p.documents = p.documents ?? []
+    p.roadmap_stages = p.roadmap_stages ?? []
+    p.stats = (p.stats ?? {}) as Project['stats']
+    for (const d of p.documents as (Omit<Document, 'tasks' | 'sections' | 'meta'> & {
+      tasks?: Document['tasks'] | null
+      sections?: Document['sections'] | null
+      meta?: Document['meta'] | null
+    })[]) {
+      d.tasks = d.tasks ?? []
+      d.sections = d.sections ?? []
+      d.meta = d.meta ?? {}
+    }
+  }
+  return agg
 }
 
 // 订阅 SSE /events，文档变化时触发 onRefresh

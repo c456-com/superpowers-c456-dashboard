@@ -180,7 +180,7 @@ func extractSections(lines []string) []Section {
 }
 
 func extractRoadmapStages(lines []string) []RoadmapStage {
-	var stages []RoadmapStage
+	stages := make([]RoadmapStage, 0)
 	var cur *RoadmapStage
 	for _, ln := range lines {
 		m := stageRe.FindStringSubmatch(ln)
@@ -220,7 +220,7 @@ func extractRoadmapStages(lines []string) []RoadmapStage {
 		return stages
 	}
 	// 回退：箭头开发顺序
-	var seq []RoadmapStage
+	seq := make([]RoadmapStage, 0)
 	for _, ln := range lines {
 		am := arrowRe.FindStringSubmatch(ln)
 		if am != nil {
@@ -358,7 +358,7 @@ func Scan(root string, extIgnore []string, docDirs []string) *Project {
 	incDirs := []string{"docs"}
 	incDirs = append(incDirs, docDirs...)
 
-	var docs []Document
+	docs := make([]Document, 0)
 	seen := map[string]bool{}
 	collect := func(doc *Document) {
 		if !seen[doc.Path] {
@@ -396,7 +396,7 @@ func Scan(root string, extIgnore []string, docDirs []string) *Project {
 
 	stats := buildStats(docs)
 	roads := filterType(docs, "roadmap")
-	var stages []RoadmapStage
+	stages := make([]RoadmapStage, 0)
 	for _, r := range roads {
 		stages = append(stages, extractRoadmapStages(strings.Split(r.Content, "\n"))...)
 	}
