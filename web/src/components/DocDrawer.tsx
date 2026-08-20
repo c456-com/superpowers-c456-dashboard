@@ -11,7 +11,7 @@ interface Props {
 export default function DocDrawer({ doc, onClose }: Props) {
   return (
     <Sheet open={!!doc} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto" side="right">
+      <SheetContent className="w-full sm:max-w-3xl! overflow-y-auto px-7" side="right">
         {doc && (
           <>
             <SheetTitle className="text-base font-bold flex items-center gap-2 pr-8">
@@ -25,8 +25,8 @@ export default function DocDrawer({ doc, onClose }: Props) {
               {doc.status ? ` · ${doc.status}` : ''}
             </div>
             <div
-              className="markdown mt-4"
-              // 简单 markdown 渲染（保留原文本于 pre；完整渲染可选 marked/渲染库）
+              className="markdown mt-4 px-1"
+              // 简单 markdown 渲染（完整渲染可选 marked/渲染库）
             >
               <RenderMd content={doc.content} />
             </div>

@@ -16,6 +16,8 @@ import TasksView from './views/TasksView'
 
 interface Props {
   project: Project
+  view: string
+  onViewChange: (v: string) => void
 }
 
 const VIEW_TABS: [string, string][] = [
@@ -26,8 +28,7 @@ const VIEW_TABS: [string, string][] = [
   ['tasks', '✅ 任务清单'],
 ]
 
-export default function ProjectDetail({ project }: Props) {
-  const [view, setView] = useState('overview')
+export default function ProjectDetail({ project, view, onViewChange }: Props) {
   const [openDoc, setOpenDoc] = useState<Document | null>(null)
 
   return (
@@ -71,7 +72,7 @@ export default function ProjectDetail({ project }: Props) {
           {VIEW_TABS.map(([k, label]) => (
             <button
               key={k}
-              onClick={() => setView(k)}
+              onClick={() => onViewChange(k)}
               className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium border transition-colors ${
                 view === k
                   ? 'bg-primary text-white border-primary'
