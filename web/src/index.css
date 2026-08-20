@@ -61,18 +61,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 抽屉 Markdown 基础排版 */
-.markdown h1 { font-size: 22px; margin: 10px 0 16px; }
-.markdown h2 { font-size: 17px; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-.markdown h3 { font-size: 15px; margin: 16px 0 8px; }
-.markdown pre { background: #f6f7f8; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
-.markdown code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
-.markdown blockquote { border-left: 3px solid var(--border); padding-left: 12px; color: var(--sub); margin: 10px 0; }
-.markdown table { border-collapse: collapse; margin: 10px 0; width: 100%; }
-.markdown td, .markdown th { border: 1px solid var(--border); padding: 6px 9px; font-size: 13px; text-align: left; }
-.markdown th { background: #fafafa; }
-.markdown ul, .markdown ol { padding-left: 22px; margin: 8px 0; }
-
 .dark {
   --background: oklch(0.147 0.004 49.25);
   --foreground: oklch(0.985 0.001 106.423);

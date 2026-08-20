@@ -65,7 +65,7 @@ export default function FileViewer({ project, path, dir, onClose }: Props) {
           {error && <div className="text-destructive text-sm">{error}</div>}
           {!data && !error && <div className="text-muted-foreground text-sm">加载中…</div>}
           {data && (
-            <pre className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-gray-50 p-4 rounded-lg border border-gray-200 overflow-x-auto">
+            <pre className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-muted/60 p-4 rounded-lg border border-border overflow-x-auto">
               <code
                 className="hljs text-[13px] leading-relaxed bg-transparent p-0"
                 dangerouslySetInnerHTML={{ __html: highlighted }}
