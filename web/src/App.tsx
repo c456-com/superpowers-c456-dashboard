@@ -6,6 +6,7 @@ import ProjectBoard from './components/ProjectBoard'
 import ProjectDetail from './components/ProjectDetail'
 import Header from './components/Header'
 import ManagePanel from './components/ManagePanel'
+import AIPanel from './components/AIPanel'
 
 // hash 路由：`#/` 或空 = 首页多项目看板；`#/项目名` = 单项目（默认总览）；`#/项目名/视图`
 function parseHash(): { name: string | null; view: string } {
@@ -65,6 +66,7 @@ export default function App() {
   const handleBack = () => navigate(null)
 
   const [manageOpen, setManageOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const handleChanged = () => {
     qc.invalidateQueries({ queryKey: ['aggregate'] })
   }
@@ -85,6 +87,7 @@ export default function App() {
         onBack={handleBack}
         onSwitch={handleSwitch}
         onManage={() => setManageOpen(true)}
+        onAI={() => setAiOpen(true)}
       />
       <div className="flex-1">
         {isLoading && <div className="p-8 text-center text-muted-foreground">加载中…</div>}
@@ -107,6 +110,11 @@ export default function App() {
         onClose={() => setManageOpen(false)}
         onChanged={handleChanged}
         onEnter={handleEnter}
+      />
+      <AIPanel
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        project={curProject?.name}
       />
     </div>
   )

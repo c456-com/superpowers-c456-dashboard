@@ -1,4 +1,4 @@
-import { Activity, Settings } from 'lucide-react'
+import { Activity, Settings, Sparkles } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -17,6 +17,7 @@ interface Props {
   onBack: () => void
   onSwitch: (name: string) => void
   onManage: () => void
+  onAI: () => void
 }
 
 export default function Header({
@@ -29,6 +30,7 @@ export default function Header({
   onBack,
   onSwitch,
   onManage,
+  onAI,
 }: Props) {
   const inProject = !!currentProject
 
@@ -90,6 +92,14 @@ export default function Header({
         <span className="inline-block size-2 rounded-full bg-green-500" />
         自动刷新
       </div>
+      <button
+        type="button"
+        onClick={onAI}
+        className="inline-flex items-center gap-1 rounded-md border border-primary/30 text-primary bg-primary/5 px-2.5 py-1.5 text-xs font-medium hover:bg-primary/10 transition-colors whitespace-nowrap"
+        title="AI 开发顾问（分析项目给建议）"
+      >
+        <Sparkles className="size-3.5" /> AI 顾问
+      </button>
       <button
         type="button"
         onClick={onManage}

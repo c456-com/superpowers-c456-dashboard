@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"superpowers-c456-dashboard/internal/aggregate"
+	"superpowers-c456-dashboard/internal/ai"
 	"superpowers-c456-dashboard/internal/config"
 )
 
@@ -42,6 +43,11 @@ type Server struct {
 
 	scanMu sync.Mutex
 	scan   ScanState // 目录扫描运行状态（前端展示实时进度）
+
+	authPath      string
+	sugMu         sync.Mutex
+	suggestions   []ai.Suggestion // 最近一次 AI 分析结果
+	suggestionsAt string
 }
 
 // ScanState 目录扫描的实时运行状态。
@@ -59,6 +65,7 @@ func New(cfg Config) (*Server, error) {
 		cfg:        cfg,
 		configPath: cfg.ConfigPath,
 		clients:    map[chan string]struct{}{},
+		authPath:   ai.DefaultAuthPath(),
 	}
 	specs, err := config.LoadSpecs(cfg.ConfigPath)
 	if err != nil {
@@ -124,6 +131,12 @@ func (s *Server) handler() http.Handler {
 	mux.HandleFunc("DELETE /api/projects/{name}", s.removeProjectHandler)
 	mux.HandleFunc("POST /api/scan-dir", s.scanDirHandler)
 	mux.HandleFunc("GET /api/scan/status", s.scanStatusHandler)
+
+	// AI 建议引擎：配置读写 + 手动触发 + 结果查询
+	mux.HandleFunc("GET /api/ai/config", s.aiConfigHandler)
+	mux.HandleFunc("POST /api/ai/config", s.aiSaveConfigHandler)
+	mux.HandleFunc("POST /api/ai/analyse", s.aiAnalyseHandler)
+	mux.HandleFunc("GET /api/ai/suggestions", s.aiSuggestionsHandler)
 
 	mux.HandleFunc("GET /events", s.sseHandler)
 

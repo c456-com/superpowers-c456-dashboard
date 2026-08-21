@@ -77,6 +77,47 @@ export async function scanStatus(): Promise<ScanState> {
   return data as ScanState
 }
 
+// AI 建议引擎
+export interface AIConfig {
+  base_url: string
+  model: string
+  has_key: boolean
+}
+export interface AISuggestion {
+  id: string
+  type: string
+  severity: string
+  title: string
+  detail: string
+  action: string
+}
+export async function getAIConfig(): Promise<AIConfig> {
+  const r = await fetch('/api/ai/config')
+  return (await r.json().catch(() => ({}))) as AIConfig
+}
+export async function saveAIConfig(cfg: { base_url: string; model: string; api_key: string }): Promise<void> {
+  const r = await fetch('/api/ai/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cfg),
+  })
+  const d = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error((d as { error?: string }).error || ('保存失败 ' + r.status))
+}
+export async function analyseProject(project?: string): Promise<void> {
+  const r = await fetch('/api/ai/analyse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project: project || '' }),
+  })
+  const d = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error((d as { error?: string }).error || ('分析失败 ' + r.status))
+}
+export async function getSuggestions(): Promise<{ at: string; suggestions: AISuggestion[] }> {
+  const r = await fetch('/api/ai/suggestions')
+  return (await r.json().catch(() => ({ at: '', suggestions: [] })))
+}
+
 // 防御性归一化：确保数组/对象字段非 null（后端曾因 nil slice 序列化为 null 导致前端崩）
 // 即使后端漏修，前端也不会因数据形状白屏。
 function normalize(agg: Aggregate): Aggregate {
