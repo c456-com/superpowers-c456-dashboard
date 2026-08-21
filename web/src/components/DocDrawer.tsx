@@ -62,7 +62,7 @@ export default function DocDrawer({ doc, onClose, projectName }: Props) {
                                 e.preventDefault()
                                 setFile({ project: projectName, path: href, dir: docDir })
                               }}
-                              className="text-blue-600 hover:underline cursor-pointer font-medium"
+                              className="text-primary hover:underline cursor-pointer font-medium"
                             >
                               {children}
                             </button>

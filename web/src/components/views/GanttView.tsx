@@ -32,17 +32,17 @@ export default function GanttView({ project }: Props) {
           const pct = total ? Math.round((done / total) * 100) : 0
           const start = d.date || today
           return (
-            <div key={d.path} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
+            <div key={d.path} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
               <div className="w-40 shrink-0 truncate text-[13px] font-medium">{d.title.slice(0, 20)}</div>
               <div className="text-[11px] text-muted-foreground shrink-0 w-24">{start}</div>
-              <div className="flex-1 h-5 bg-gray-50 rounded relative overflow-hidden">
-                <div className="h-full bg-blue-100 rounded" style={{ width: `${pct}%` }} />
+              <div className="flex-1 h-5 bg-muted rounded relative overflow-hidden">
+                <div className="h-full bg-blue-500/30 rounded" style={{ width: `${pct}%` }} />
                 <div
                   className="absolute inset-y-0 left-0 bg-primary/80 rounded"
                   style={{ width: `${Math.min(100, pct || 8)}%` }}
                 />
               </div>
-              <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 shrink-0">
+              <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 shrink-0">
                 {done}/{total} {pct}%
               </span>
             </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Document, Project } from '../../lib/types'
-import { TYPE_LABEL, TYPE_ORDER, normalizeStatus } from '../../lib/types'
+import { TYPE_LABEL, TYPE_ORDER, normalizeStatus, TYPE_COLOR } from '../../lib/types'
 import { ChevronRight } from 'lucide-react'
 
 interface Props {
@@ -28,24 +28,15 @@ export default function OverviewView({ project, onOpen }: Props) {
           const total = list.reduce((acc, d) => acc + (d.tasks || []).length, 0)
           const pct = total ? Math.round((done / total) * 100) : 0
           const active = sel === t
-          // 该类型色
-          const color = {
-            requirement: 'border-rose-200 hover:border-rose-400 text-rose-600',
-            research: 'border-border hover:border-gray-400 text-muted-foreground',
-            story: 'border-teal-200 hover:border-teal-400 text-teal-600',
-            product: 'border-fuchsia-200 hover:border-fuchsia-400 text-fuchsia-600',
-            spec: 'border-blue-200 hover:border-blue-400 text-blue-600',
-            roadmap: 'border-amber-200 hover:border-amber-400 text-amber-600',
-            plan: 'border-green-200 hover:border-green-400 text-green-600',
-            sprint: 'border-violet-200 hover:border-violet-400 text-violet-600',
-          }[t] || 'border-border text-muted-foreground'
+          // 该类型色（dark 可读）
+          const color = TYPE_COLOR[t] || { border: 'border-border', text: 'text-muted-foreground', tag: '' }
 
           return (
             <div key={t} className="flex items-stretch shrink-0">
               <button
                 type="button"
                 onClick={() => setSel(active ? null : t)}
-                className={`w-44 text-left rounded-xl border-2 bg-card p-4 flex flex-col gap-2 transition-colors cursor-pointer ${color} ${active ? 'ring-2 ring-primary/30' : ''}`}
+                className={`w-44 text-left rounded-xl border-2 bg-card p-4 flex flex-col gap-2 transition-colors cursor-pointer ${color.border} ${color.text} ${active ? 'ring-2 ring-primary/30' : ''}`}
               >
                 <div className="font-bold text-sm">{TYPE_LABEL[t]}</div>
                 {list.length === 0 ? (
@@ -142,19 +133,9 @@ function ListPanel({ type, list, onOpen }: { type: string; list: Document[]; onO
 }
 
 export function TypeTag({ type }: { type: string }) {
-  const map: Record<string, string> = {
-    requirement: 'text-rose-600 bg-rose-50',
-    research: 'text-muted-foreground bg-muted',
-    story: 'text-teal-600 bg-teal-50',
-    product: 'text-fuchsia-600 bg-fuchsia-50',
-    spec: 'text-blue-600 bg-blue-50',
-    roadmap: 'text-amber-600 bg-amber-50',
-    plan: 'text-green-600 bg-green-50',
-    sprint: 'text-violet-600 bg-violet-50',
-    doc: 'text-muted-foreground bg-muted',
-  }
+  const c = TYPE_COLOR[type] || TYPE_COLOR.doc
   return (
-    <span className={`inline-flex items-center rounded-md text-[11px] font-semibold px-1.5 py-0.5 ${map[type] || map.doc}`}>
+    <span className={`inline-flex items-center rounded-md text-[11px] font-semibold px-1.5 py-0.5 ${c.tag}`}>
       {TYPE_LABEL[type] || type}
     </span>
   )

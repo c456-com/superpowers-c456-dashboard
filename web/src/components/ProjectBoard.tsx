@@ -45,9 +45,9 @@ export default function ProjectBoard({ projects, onEnter }: Props) {
                 任务 {s.tasks_done}/{s.tasks_total} · spec {s.specs_total} · plan {s.plans_total} · sprint {s.sprints_total}
               </div>
               <div className="flex gap-1.5 flex-wrap">
-                {p.type && <span className="px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 text-xs">{p.type}</span>}
+                {p.type && <span className="px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-400 text-xs">{p.type}</span>}
                 {p.status && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${p.status.includes('暂停') ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${p.status.includes('暂停') ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-green-500/10 text-green-700 dark:text-green-400'}`}>
                     {p.status}
                   </span>
                 )}

@@ -104,7 +104,7 @@ export default function MindmapView({ project, onOpen }: Props) {
 // 根节点
 function RootNode({ data }: { data: { label: string } }) {
   return (
-    <div className="bg-primary text-white rounded-xl px-4 py-3 font-semibold text-sm shadow text-center">
+    <div className="bg-primary text-primary-foreground rounded-xl px-4 py-3 font-semibold text-sm shadow text-center">
       {data.label}
       <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
     </div>
@@ -118,7 +118,7 @@ function SpecNode({ data }: { data: { doc: Document; onOpen: (d: Document) => vo
     <button
       type="button"
       onClick={() => data.onOpen(d)}
-      className="block w-60 text-left bg-card border-2 border-blue-200 rounded-xl p-3 shadow-sm hover:border-blue-400 hover:shadow transition-all cursor-pointer"
+      className="block w-60 text-left bg-card border-2 border-blue-500/40 rounded-xl p-3 shadow-sm hover:border-blue-500/60 hover:shadow transition-all cursor-pointer"
     >
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -130,7 +130,7 @@ function SpecNode({ data }: { data: { doc: Document; onOpen: (d: Document) => vo
       <div className="mt-1.5 flex flex-col gap-0.5">
         {(d.sections || []).slice(0, 4).map((s, j) => (
           <div key={j} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="size-1 rounded-full bg-blue-300 shrink-0" />
+            <span className="size-1 rounded-full bg-blue-500/50 shrink-0" />
             <span className="truncate">{s.title}</span>
           </div>
         ))}

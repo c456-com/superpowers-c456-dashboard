@@ -21,7 +21,7 @@ export default function RoadmapView({ project }: Props) {
           <ol className="relative border-l-2 border-border ml-2 pl-6 space-y-6">
             {stages.map((st) => (
               <li key={st.id} className="relative">
-                <span className="absolute -left-[34px] flex items-center justify-center size-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                <span className="absolute -left-[34px] flex items-center justify-center size-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold">
                   {st.id}
                 </span>
                 <div className="font-semibold">{st.title}</div>

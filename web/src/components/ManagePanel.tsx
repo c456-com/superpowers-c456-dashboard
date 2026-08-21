@@ -219,7 +219,7 @@ export default function ManagePanel({ projects, open, onClose, onChanged, onEnte
         </div>
 
         {msg && (
-          <div className={`shrink-0 px-6 py-3 border-t border-border text-sm ${msg.ok ? 'text-green-600' : 'text-destructive'}`}>
+          <div className={`shrink-0 px-6 py-3 border-t border-border text-sm ${msg.ok ? 'text-green-700 dark:text-green-400' : 'text-destructive'}`}>
             {msg.text}
           </div>
         )}

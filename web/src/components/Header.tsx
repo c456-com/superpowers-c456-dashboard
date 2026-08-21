@@ -78,14 +78,14 @@ export default function Header({
 
       {/* 进度徽标：首页=全局任务；项目页=当前项目进度+URL */}
       {inProject && currentProject ? (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 text-primary text-xs font-semibold px-3 py-1 max-w-[40%]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold px-3 py-1 max-w-[40%]">
           进度 {currentProject.stats.tasks_done}/{currentProject.stats.tasks_total} · {currentProject.stats.completion}%
           <span className="text-primary/60 font-normal truncate" title={currentProject.root}>
             {currentProject.root}
           </span>
         </span>
       ) : (
-        <span className="inline-flex items-center rounded-full bg-blue-50 text-primary text-xs font-semibold px-3 py-1">
+        <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs font-semibold px-3 py-1">
           全局任务 {globalDone}/{globalTotal} · {globalCompletion}%
         </span>
       )}
@@ -93,7 +93,7 @@ export default function Header({
       <div className="flex-1" />
       <div className="text-xs text-muted-foreground whitespace-nowrap">更新于 {generatedAt}</div>
       <div className="text-xs text-muted-foreground flex items-center gap-1 whitespace-nowrap">
-        <span className="inline-block size-2 rounded-full bg-green-500" />
+        <span className="inline-block size-2 rounded-full bg-primary" />
         自动刷新
       </div>
       <button

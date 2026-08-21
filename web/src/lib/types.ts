@@ -80,6 +80,19 @@ export const TYPE_LABEL: Record<string, string> = {
   doc: '文档',
 }
 
+// 类型语义色（dark 变体）：明暗都可读的边框/Tag 色，一处维护
+export const TYPE_COLOR: Record<string, { border: string; text: string; tag: string }> = {
+  requirement: { border: 'border-rose-300 dark:border-rose-500/50', text: 'text-rose-700 dark:text-rose-400', tag: 'text-rose-700 dark:text-rose-300 bg-rose-500/10' },
+  research: { border: 'border-border', text: 'text-muted-foreground', tag: 'text-muted-foreground bg-muted' },
+  story: { border: 'border-teal-300 dark:border-teal-500/50', text: 'text-teal-700 dark:text-teal-400', tag: 'text-teal-700 dark:text-teal-300 bg-teal-500/10' },
+  product: { border: 'border-fuchsia-300 dark:border-fuchsia-500/50', text: 'text-fuchsia-700 dark:text-fuchsia-400', tag: 'text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-500/10' },
+  spec: { border: 'border-blue-300 dark:border-blue-500/50', text: 'text-blue-700 dark:text-blue-400', tag: 'text-blue-700 dark:text-blue-300 bg-blue-500/10' },
+  roadmap: { border: 'border-amber-300 dark:border-amber-500/50', text: 'text-amber-700 dark:text-amber-400', tag: 'text-amber-700 dark:text-amber-300 bg-amber-500/10' },
+  plan: { border: 'border-green-300 dark:border-green-500/50', text: 'text-green-700 dark:text-green-400', tag: 'text-green-700 dark:text-green-300 bg-green-500/10' },
+  sprint: { border: 'border-violet-300 dark:border-violet-500/50', text: 'text-violet-700 dark:text-violet-400', tag: 'text-violet-700 dark:text-violet-300 bg-violet-500/10' },
+  doc: { border: 'border-border', text: 'text-muted-foreground', tag: 'text-muted-foreground bg-muted' },
+}
+
 // 工作流 8 阶段展示顺序（首页工作流 + 侧栏索引排序）
 export const TYPE_ORDER = [
   'requirement',

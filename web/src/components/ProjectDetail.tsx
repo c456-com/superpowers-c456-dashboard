@@ -53,7 +53,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
                       <button
                         key={d.path}
                         onClick={() => setOpenDoc(d)}
-                        className="text-left text-[13px] text-foreground hover:bg-gray-50 rounded px-2 py-1.5 flex items-center gap-2"
+                        className="text-left text-[13px] text-foreground hover:bg-muted rounded px-2 py-1.5 flex items-center gap-2"
                       >
                         <span className="truncate flex-1">
                           <span className="mr-0.5">{StatusEmoji(d.status)}</span>
@@ -80,7 +80,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
               onClick={() => onViewChange(k)}
               className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium border transition-colors ${
                 view === k
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
               }`}
             >

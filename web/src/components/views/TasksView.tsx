@@ -32,7 +32,7 @@ export default function TasksView({ project, onOpen }: Props) {
                 <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden ml-auto">
                   <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 shrink-0">
+                <span className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 shrink-0">
                   {done}/{d.tasks.length}
                 </span>
               </div>

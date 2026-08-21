@@ -18,9 +18,9 @@ interface Props {
 }
 
 const SEV: Record<string, string> = {
-  success: 'text-green-600 border-green-200 bg-green-50',
-  warning: 'text-amber-600 border-amber-200 bg-amber-50',
-  info: 'text-blue-600 border-blue-200 bg-blue-50',
+  success: 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-500/50 bg-green-500/10',
+  warning: 'text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/50 bg-amber-500/10',
+  info: 'text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/50 bg-blue-500/10',
 }
 
 export default function AIPanel({ open, onOpenChange, project }: Props) {
@@ -130,7 +130,7 @@ export default function AIPanel({ open, onOpenChange, project }: Props) {
                 <span className="text-xs text-muted-foreground font-normal">{suggestions.length} 条</span>
               </div>
               {suggestions.map((s, i) => (
-                <div key={i} className={`rounded-lg border px-3.5 py-3 text-sm ${SEV[s.severity] || 'text-blue-600 border-blue-200 bg-blue-50'}`}>
+                <div key={i} className={`rounded-lg border px-3.5 py-3 text-sm ${SEV[s.severity] || 'text-primary border-blue-500/40 bg-primary/10'}`}>
                   <div className="font-semibold">{s.title}</div>
                   <div className="text-[13px] mt-1 opacity-90 whitespace-pre-wrap">{s.detail}</div>
                   {s.action && <div className="text-xs mt-1.5 font-medium">建议行动：{s.action}</div>}
@@ -140,7 +140,7 @@ export default function AIPanel({ open, onOpenChange, project }: Props) {
           )}
 
           {msg && (
-            <div className={`text-sm ${msg.ok ? 'text-green-600' : 'text-destructive'}`}>{msg.text}</div>
+            <div className={`text-sm ${msg.ok ? 'text-green-700 dark:text-green-400' : 'text-destructive'}`}>{msg.text}</div>
           )}
         </div>
       </SheetContent>
