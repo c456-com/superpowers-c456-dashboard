@@ -9,6 +9,7 @@ import { DOC_TYPES, TYPE_LABEL } from '../lib/types'
 import type { Document, Project } from '../lib/types'
 import DocDrawer from './DocDrawer'
 import OverviewView, { StatusEmoji } from './views/OverviewView'
+import SprintView from './views/SprintView'
 import RoadmapView from './views/RoadmapView'
 import MindmapView from './views/MindmapView'
 import GanttView from './views/GanttView'
@@ -22,6 +23,7 @@ interface Props {
 
 const VIEW_TABS: [string, string][] = [
   ['overview', '📊 总览'],
+  ['sprint', '🗓️ 冲刺'],
   ['roadmap', '🗺️ Roadmap'],
   ['mindmap', '🕸️ 功能图谱'],
   ['gantt', '📅 开发计划'],
@@ -88,6 +90,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
         </div>
 
         {view === 'overview' && <OverviewView project={project} onOpen={setOpenDoc} />}
+        {view === 'sprint' && <SprintView project={project} onOpen={setOpenDoc} />}
         {view === 'roadmap' && <RoadmapView project={project} />}
         {view === 'mindmap' && <MindmapView project={project} onOpen={setOpenDoc} />}
         {view === 'gantt' && <GanttView project={project} />}
