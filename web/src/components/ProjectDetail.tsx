@@ -43,9 +43,9 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
             if (list.length === 0) return null
             return (
               <AccordionItem key={t} value={t}>
-                <AccordionTrigger className="py-2 text-[13px] font-semibold">
+                <AccordionTrigger className="py-2 text-[13px] font-semibold hover:no-underline hover:text-popover-foreground transition-colors">
                   {TYPE_LABEL[t]}
-                  <span className="ml-auto mr-1 text-xs bg-muted rounded-full px-2">{list.length}</span>
+                  <span className="text-xs text-muted-foreground font-normal">({list.length})</span>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="flex flex-col gap-0.5">
