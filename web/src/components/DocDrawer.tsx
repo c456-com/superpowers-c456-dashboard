@@ -41,7 +41,7 @@ export default function DocDrawer({ doc, onClose, projectName }: Props) {
               </div>
               {/* content：独立滚动 + 上下左右 padding；react-markdown 完整渲染 GFM */}
               <div className="flex-1 overflow-y-auto px-7 py-5">
-                <article className="prose prose-sm prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-headings:mt-6 prose-headings:mb-3 prose-p:my-2 prose-li:my-0.5 prose-pre:bg-gray-50 prose-pre:p-3 prose-blockquote:border-l-2 prose-blockquote:border-gray-300 prose-blockquote:pl-3 prose-blockquote:text-gray-600 prose-a:text-blue-600 prose-table:border prose-table:border-gray-200 prose-th:bg-gray-50 prose-th:p-2 prose-td:p-2">
+                <article className="prose prose-sm prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-headings:mt-6 prose-headings:mb-3 prose-p:my-2 prose-li:my-0.5 prose-pre:bg-muted prose-pre:p-3 prose-blockquote:border-l-2 prose-blockquote:border-border prose-blockquote:pl-3 prose-blockquote:text-muted-foreground prose-a:text-primary prose-table:border prose-table:border-border prose-th:bg-muted prose-th:p-2 prose-td:p-2">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeHighlight]}

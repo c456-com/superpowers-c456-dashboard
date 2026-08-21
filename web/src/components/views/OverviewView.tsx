@@ -31,21 +31,21 @@ export default function OverviewView({ project, onOpen }: Props) {
           // 该类型色
           const color = {
             requirement: 'border-rose-200 hover:border-rose-400 text-rose-600',
-            research: 'border-gray-200 hover:border-gray-400 text-gray-600',
+            research: 'border-border hover:border-gray-400 text-muted-foreground',
             story: 'border-teal-200 hover:border-teal-400 text-teal-600',
             product: 'border-fuchsia-200 hover:border-fuchsia-400 text-fuchsia-600',
             spec: 'border-blue-200 hover:border-blue-400 text-blue-600',
             roadmap: 'border-amber-200 hover:border-amber-400 text-amber-600',
             plan: 'border-green-200 hover:border-green-400 text-green-600',
             sprint: 'border-violet-200 hover:border-violet-400 text-violet-600',
-          }[t] || 'border-gray-200 text-gray-600'
+          }[t] || 'border-border text-muted-foreground'
 
           return (
             <div key={t} className="flex items-stretch shrink-0">
               <button
                 type="button"
                 onClick={() => setSel(active ? null : t)}
-                className={`w-44 text-left rounded-xl border-2 bg-white p-4 flex flex-col gap-2 transition-colors cursor-pointer ${color} ${active ? 'ring-2 ring-primary/30' : ''}`}
+                className={`w-44 text-left rounded-xl border-2 bg-card p-4 flex flex-col gap-2 transition-colors cursor-pointer ${color} ${active ? 'ring-2 ring-primary/30' : ''}`}
               >
                 <div className="font-bold text-sm">{TYPE_LABEL[t]}</div>
                 {list.length === 0 ? (
@@ -54,7 +54,7 @@ export default function OverviewView({ project, onOpen }: Props) {
                   <>
                     <div className="text-xs text-muted-foreground">{list.length} 篇</div>
                     <div className="flex items-center gap-1.5">
-                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div className="h-full bg-current rounded-full" style={{ width: pct + '%' }} />
                       </div>
                       <span className="text-[10px] text-muted-foreground">{pct}%</span>
@@ -67,7 +67,7 @@ export default function OverviewView({ project, onOpen }: Props) {
               </button>
               {/* 阶段间连线箭头 */}
               {i < FLOW.length - 1 && (
-                <div className="flex items-center px-0.5 text-gray-300">
+                <div className="flex items-center px-0.5 text-muted-foreground/70">
                   <ChevronRight className="size-5" />
                 </div>
               )}
@@ -103,7 +103,7 @@ function StatRow({ project }: { project: Project }) {
   return (
     <>
       {items.map(([k, v, u]) => (
-        <div key={k} className="bg-white border border-border rounded-xl p-3.5">
+        <div key={k} className="bg-card border border-border rounded-xl p-3.5">
           <div className="text-xs text-muted-foreground mb-1">{k}</div>
           <div className="text-xl font-bold">{v}<small className="text-xs text-muted-foreground ml-0.5">{u}</small></div>
         </div>
@@ -114,14 +114,14 @@ function StatRow({ project }: { project: Project }) {
 
 function ListPanel({ type, list, onOpen }: { type: string; list: Document[]; onOpen: (d: Document) => void }) {
   return (
-    <div className="bg-white border border-border rounded-xl p-4 mt-5">
+    <div className="bg-card border border-border rounded-xl p-4 mt-5">
       <h3 className="font-bold mb-3">
         {TYPE_LABEL[type]}
-        <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5">{list.length}</span>
+        <span className="ml-2 inline-flex items-center rounded-full bg-muted text-muted-foreground text-xs font-semibold px-2 py-0.5">{list.length}</span>
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {list.map((d) => (
-          <button key={d.path} onClick={() => onOpen(d)} className="text-left bg-white border border-border rounded-lg p-3.5 hover:border-primary transition-colors cursor-pointer">
+          <button key={d.path} onClick={() => onOpen(d)} className="text-left bg-card border border-border rounded-lg p-3.5 hover:border-primary transition-colors cursor-pointer">
             <div className="font-semibold flex items-center gap-2">
               <TypeTag type={d.type} />
               <span className="truncate">
@@ -130,7 +130,7 @@ function ListPanel({ type, list, onOpen }: { type: string; list: Document[]; onO
               </span>
             </div>
             <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.summary || ''}</div>
-            <div className="text-[11px] text-gray-400 mt-2 flex items-center gap-2">
+            <div className="text-[11px] text-muted-foreground mt-2 flex items-center gap-2">
               <span>{d.date || '无日期'}</span>
               {(d.tasks || []).length ? <span>{d.tasks.filter((x) => x.done).length}/{d.tasks.length} 项</span> : null}
             </div>
@@ -144,14 +144,14 @@ function ListPanel({ type, list, onOpen }: { type: string; list: Document[]; onO
 export function TypeTag({ type }: { type: string }) {
   const map: Record<string, string> = {
     requirement: 'text-rose-600 bg-rose-50',
-    research: 'text-gray-600 bg-gray-100',
+    research: 'text-muted-foreground bg-muted',
     story: 'text-teal-600 bg-teal-50',
     product: 'text-fuchsia-600 bg-fuchsia-50',
     spec: 'text-blue-600 bg-blue-50',
     roadmap: 'text-amber-600 bg-amber-50',
     plan: 'text-green-600 bg-green-50',
     sprint: 'text-violet-600 bg-violet-50',
-    doc: 'text-gray-600 bg-gray-100',
+    doc: 'text-muted-foreground bg-muted',
   }
   return (
     <span className={`inline-flex items-center rounded-md text-[11px] font-semibold px-1.5 py-0.5 ${map[type] || map.doc}`}>

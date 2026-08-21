@@ -1,4 +1,4 @@
-import { Activity, Settings, Sparkles } from 'lucide-react'
+import { Activity, Settings, Sparkles, Sun, Moon } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -18,6 +18,8 @@ interface Props {
   onSwitch: (name: string) => void
   onManage: () => void
   onAI: () => void
+  dark: boolean
+  onToggleTheme: () => void
 }
 
 export default function Header({
@@ -31,11 +33,13 @@ export default function Header({
   onSwitch,
   onManage,
   onAI,
+  dark,
+  onToggleTheme,
 }: Props) {
   const inProject = !!currentProject
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-border h-14 px-6 flex items-center gap-4">
+    <header className="sticky top-0 z-50 bg-background border-b border-border h-14 px-6 flex items-center gap-4">
       {/* 左上角品牌：点击返回全部项目 */}
       <button
         onClick={onBack}
@@ -92,6 +96,15 @@ export default function Header({
         <span className="inline-block size-2 rounded-full bg-green-500" />
         自动刷新
       </div>
+      <button
+        type="button"
+        onClick={onToggleTheme}
+        className="inline-flex items-center justify-center rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors whitespace-nowrap"
+        title={dark ? '切换到亮色' : '切换到暗色'}
+        aria-label="切换明暗主题"
+      >
+        {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+      </button>
       <button
         type="button"
         onClick={onAI}

@@ -28,7 +28,7 @@ export default function ProjectBoard({ projects, onEnter }: Props) {
             <button
               key={p.name}
               onClick={() => onEnter(p.name)}
-              className="text-left bg-white border border-border rounded-xl p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer"
+              className="text-left bg-card border border-border rounded-xl p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-bold">{p.name}</span>
@@ -36,7 +36,7 @@ export default function ProjectBoard({ projects, onEnter }: Props) {
               </div>
               <div className="text-[11px] text-muted-foreground mb-2 break-all">{p.root}</div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-primary rounded-full" style={{ width: `${s.completion || 0}%` }} />
                 </div>
                 <span className="text-xs font-semibold text-primary whitespace-nowrap">{s.completion || 0}%</span>

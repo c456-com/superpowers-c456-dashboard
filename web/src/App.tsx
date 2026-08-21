@@ -7,6 +7,7 @@ import ProjectDetail from './components/ProjectDetail'
 import Header from './components/Header'
 import ManagePanel from './components/ManagePanel'
 import AIPanel from './components/AIPanel'
+import { useTheme } from './lib/theme'
 
 // hash 路由：`#/` 或空 = 首页多项目看板；`#/项目名` = 单项目（默认总览）；`#/项目名/视图`
 function parseHash(): { name: string | null; view: string } {
@@ -67,6 +68,7 @@ export default function App() {
 
   const [manageOpen, setManageOpen] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
+  const [dark, toggleTheme] = useTheme()
   const handleChanged = () => {
     qc.invalidateQueries({ queryKey: ['aggregate'] })
   }
@@ -88,6 +90,8 @@ export default function App() {
         onSwitch={handleSwitch}
         onManage={() => setManageOpen(true)}
         onAI={() => setAiOpen(true)}
+        dark={dark}
+        onToggleTheme={toggleTheme}
       />
       <div className="flex-1">
         {isLoading && <div className="p-8 text-center text-muted-foreground">加载中…</div>}

@@ -32,7 +32,7 @@ export default function SprintView({ project, onOpen }: Props) {
             <button
               key={s.path}
               onClick={() => onOpen(s)}
-              className="text-left bg-white border border-border rounded-xl p-4 hover:border-primary transition-colors cursor-pointer"
+              className="text-left bg-card border border-border rounded-xl p-4 hover:border-primary transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-2">
                 <TypeTag type="sprint" />
@@ -43,8 +43,8 @@ export default function SprintView({ project, onOpen }: Props) {
                 <span>{s.date || '无日期'}</span>
                 {total ? <span>{done}/{total} 项 · {pct}%</span> : <span>无任务</span>}
               </div>
-              {s.status && <div className="text-[11px] text-gray-400 mt-1">状态：{s.status}</div>}
-              <div className="mt-2 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+              {s.status && <div className="text-[11px] text-muted-foreground mt-1">状态：{s.status}</div>}
+              <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-violet-500 rounded-full" style={{ width: pct + '%' }} />
               </div>
             </button>

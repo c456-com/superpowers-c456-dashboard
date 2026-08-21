@@ -83,7 +83,7 @@ export default function MindmapView({ project, onOpen }: Props) {
           spec 图谱（可拖拽/缩放）· 点击功能节点查看详情
         </span>
       </div>
-      <div className="flex-1 bg-white border border-border rounded-xl overflow-hidden">
+      <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -118,7 +118,7 @@ function SpecNode({ data }: { data: { doc: Document; onOpen: (d: Document) => vo
     <button
       type="button"
       onClick={() => data.onOpen(d)}
-      className="block w-60 text-left bg-white border-2 border-blue-200 rounded-xl p-3 shadow-sm hover:border-blue-400 hover:shadow transition-all cursor-pointer"
+      className="block w-60 text-left bg-card border-2 border-blue-200 rounded-xl p-3 shadow-sm hover:border-blue-400 hover:shadow transition-all cursor-pointer"
     >
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -129,13 +129,13 @@ function SpecNode({ data }: { data: { doc: Document; onOpen: (d: Document) => vo
       </div>
       <div className="mt-1.5 flex flex-col gap-0.5">
         {(d.sections || []).slice(0, 4).map((s, j) => (
-          <div key={j} className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div key={j} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className="size-1 rounded-full bg-blue-300 shrink-0" />
             <span className="truncate">{s.title}</span>
           </div>
         ))}
       </div>
-      <div className="text-[10px] text-gray-400 mt-1">{d.date || ''}</div>
+      <div className="text-[10px] text-muted-foreground mt-1">{d.date || ''}</div>
       <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
     </button>
   )

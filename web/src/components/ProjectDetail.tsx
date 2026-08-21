@@ -36,7 +36,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
   return (
     <div className="flex h-[calc(100vh-56px)]">
       {/* 左侧：手风琴文档索引 */}
-      <aside className="w-60 shrink-0 bg-white border-r border-border overflow-y-auto p-3">
+      <aside className="w-60 shrink-0 bg-card border-r border-border overflow-y-auto p-3">
         <Accordion defaultValue={['spec']}>
           {DOC_TYPES.map((t) => {
             const list = project.documents.filter((d) => d.type === t).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
@@ -45,7 +45,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
               <AccordionItem key={t} value={t}>
                 <AccordionTrigger className="py-2 text-[13px] font-semibold">
                   {TYPE_LABEL[t]}
-                  <span className="ml-auto mr-1 text-xs bg-gray-100 rounded-full px-2">{list.length}</span>
+                  <span className="ml-auto mr-1 text-xs bg-muted rounded-full px-2">{list.length}</span>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="flex flex-col gap-0.5">
@@ -53,13 +53,13 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
                       <button
                         key={d.path}
                         onClick={() => setOpenDoc(d)}
-                        className="text-left text-[13px] text-gray-700 hover:bg-gray-50 rounded px-2 py-1.5 flex items-center gap-2"
+                        className="text-left text-[13px] text-foreground hover:bg-gray-50 rounded px-2 py-1.5 flex items-center gap-2"
                       >
                         <span className="truncate flex-1">
                           <span className="mr-0.5">{StatusEmoji(d.status)}</span>
                           {d.title.slice(0, 18)}{d.title.length > 18 ? '…' : ''}
                         </span>
-                        <span className="text-[11px] text-gray-400 shrink-0">{d.date || ''}</span>
+                        <span className="text-[11px] text-muted-foreground shrink-0">{d.date || ''}</span>
                       </button>
                     ))}
                   </div>
@@ -81,7 +81,7 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
               className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium border transition-colors ${
                 view === k
                   ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-gray-500 border-border hover:border-primary hover:text-primary'
+                  : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
               }`}
             >
               {label}

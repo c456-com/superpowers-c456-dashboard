@@ -13,12 +13,12 @@ export default function RoadmapView({ project }: Props) {
         <span className="text-sm text-muted-foreground">{project.name} 开发阶段演进</span>
       </div>
       {stages.length === 0 ? (
-        <div className="text-center text-muted-foreground p-8 bg-white border border-border rounded-xl">
+        <div className="text-center text-muted-foreground p-8 bg-card border border-border rounded-xl">
           未识别到 Roadmap 阶段（需 roadmap 文档含「阶段X」小节）
         </div>
       ) : (
-        <div className="bg-white border border-border rounded-xl p-5">
-          <ol className="relative border-l-2 border-gray-200 ml-2 pl-6 space-y-6">
+        <div className="bg-card border border-border rounded-xl p-5">
+          <ol className="relative border-l-2 border-border ml-2 pl-6 space-y-6">
             {stages.map((st) => (
               <li key={st.id} className="relative">
                 <span className="absolute -left-[34px] flex items-center justify-center size-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">
