@@ -73,7 +73,12 @@ dashboard 当前只能识别 4+1 类文档（spec/plan/roadmap/sprint/research +
 
 ## 二、数据模型目录 + ER 图 + 变更记录
 
-### 1. 目录结构（仓库根 docs/models/）
+### 1. 目录位置（B2：作为项目文档体系一部分，不埋进设置）
+
+数据模型目录放在**项目根 `docs/models/`**，与其他 superpowers 文档并列，被 scan 正常识别，
+在 dashboard 左侧手风琴索引/文档流中随手可见、可点开渲染 ER 图——**不藏进设置**（辉哥 UX 判断：数据模型是高查看的开发信息，须随手可见）。
+
+### 2. 目录结构（项目根 docs/models/）
 
 ```
 docs/models/
@@ -83,15 +88,16 @@ docs/models/
   er.mmd               # mermaid erDiagram 源文件（可切换显示用）
 ```
 
-### 2. ER 图（ER 图切换显示）
+### 3. 多视图（总览 → 蚂蚁，dashboard 文档视图渲染）
 
-- `schema.md` 内嵌 **mermaid `erDiagram`** 展示实体关系：Project / Document / Section / Task / RoadmapStage
-- 前端详情/文档渲染已支持 mermaid（react-markdown + 代码块），ER 图在 md 预览中可见
-- 可切换显示：同一实体关系提供 **ER 图（mermaid）+ 字段表（markdown table）** 两种呈现，
-  用户可切换（dashboard 文档视图支持 markdown 渲染即天然可切）
-- `er.mmd` 独立文件便于外部工具/渲染
+- L1 总览：**ER 图**（mermaid erDiagram）——实体关系宏观
+- L2 结构：**字段表**（markdown table）——每实体字段名/类型/说明
+- L3 明细：**JSON 契约**（/data 返回样例）
+- L4 蚂蚁：**类型/枚举明细**（doc.type 8 值 + 判定规则）
+- L5 演进：**changelog.md** 变更记录时间线
+- 因 dashboard 支持 markdown + mermaid 渲染，这些视图在文档打开时天然可看/可切换（ER 图块 + 字段表相邻）
 
-### 3. 数据模型变更记录（changelog.md）
+### 4. 数据模型变更记录（changelog.md）
 
 - 每次数据模型（struct/schema/类型判定规则）变更 → 在 changelog.md 新增一条
 - 条目格式（倒序，最新在上）：
@@ -122,20 +128,43 @@ erDiagram
 - `Task { text, done }`
 - `RoadmapStage { id, title, desc }`
 
-## 三、范围
+## 三、最佳实践注入（AGENTS.md 规则 / 数据模型同步规范）
+
+辉哥定：我们的最佳实践规则要能被扫描出的项目遵循。dashboard 作为工具，
+应让项目 AI 知道写设计时要同步维护最终版数据模型。
+
+### 1. AGENTS.md 规则注入（建议引擎场景之一，落在 AI 子项目）
+
+- dashboard 内置**开发最佳实践规则集**（模板）：8 阶段工作流、数据模型目录规范、
+  验证驱动、可追溯性元数据等（参照 athena AGENTS.md 的精炼版）
+- 扫描出的项目若 AGENTS.md 缺失这些规则 → **提示**：可一键让 AI 基于
+  项目已有 AGENTS.md 附加我们的规则（此能力在子项目 AI(3) 的 L3 agent 实现）
+
+### 2. 数据模型同步规范（写设计时必须维护最终版数据模型）
+
+- 功能设计文档常有「单功能描述 + 数据模型设计」
+- 规范：**任何功能设计/spec 涉及数据模型变更时，须同步更新 `docs/models/schema.md`**
+  （各设计文档里的模型是过程稿，schema.md 是唯一最终版）
+- dashboard/项目扫描到 spec 但 `docs/models/` 缺失或过期 → 提示（AI 子项目实现检测）
+
+> 本子项目①先落地：**规则集模板 + docs/models 目录作为项目规范的一部分**（作为模板/文档存在），
+> 注入与检测的动作交给后续 AI 子项目(3)。
+
+## 四、范围
 
 包含：
 - scan classify 扩展 3 类型
 - types.ts TYPE_LABEL/DOC_TYPES/TYPE_ORDER
-- docs/models/ 目录（README/schema/changelog/er.mmd）
+- docs/models/ 目录（README/schema/changelog/er.mmd）作为项目最佳实践规范
+- 最佳实践规则集模板（AGENTS.md 建议用的规则文档）
 - 回归测试
 
 不包含（后续子项目）：
-- AI 接入（L3 agent loop / 建议引擎）
-- 多视图 UX（路线图/图谱/时序/冲刺置顶）
+- AI 接入（L3 agent loop / 建议引擎 / 规则自动注入）
+- 多视图 UX（工作流首页/图谱/时序/冲刺置顶）
 - 7 天趋势曲线
 
-## 四、验证
+## 五、验证
 
 - `go test ./internal/scan/` 全绿（含新类型用例）
 - `bunx tsc --noEmit`
