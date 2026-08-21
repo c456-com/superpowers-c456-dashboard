@@ -102,6 +102,7 @@ var (
 var noiseSections = []string{"记录", "实测", "附录", "总结", "复盘"}
 
 // classify 判定文档类型。
+// 工作流 8 阶段：requirement → research → story → product → spec → roadmap → plan → sprint
 func classify(path, title string) string {
 	p := "/" + strings.ToLower(strings.ReplaceAll(path, "\\", "/"))
 	t := strings.ToLower(title)
@@ -111,18 +112,38 @@ func classify(path, title string) string {
 	if strings.Contains(t, "sprint") || strings.Contains(t, "冲刺") {
 		return "sprint"
 	}
+	// 1 客户需求
+	if strings.Contains(p, "/requirements/") || strings.Contains(p, "/需求/") ||
+		strings.Contains(t, "客户需求") || strings.Contains(t, "需求规格") ||
+		(strings.Contains(t, "需求") && !strings.Contains(t, "设计")) {
+		return "requirement"
+	}
+	// 2 调研（在用户故事之上）
+	if strings.Contains(p, "/research/") || strings.Contains(t, "调研") ||
+		strings.Contains(t, "探测") || strings.Contains(t, "investigation") {
+		return "research"
+	}
+	// 3 用户故事
+	if strings.Contains(p, "/stories/") || strings.Contains(p, "/用户故事/") ||
+		strings.Contains(t, "用户故事") || strings.Contains(t, "user story") || strings.Contains(t, " story") {
+		return "story"
+	}
+	// 4 产品设计（在 spec 之前，避免「产品设计」被 spec 误判）
+	if strings.Contains(p, "/product/") || strings.Contains(p, "/产品设计/") ||
+		strings.Contains(t, "产品设计") || strings.Contains(t, "信息架构") ||
+		strings.Contains(t, "交互设计") || strings.Contains(t, "ux") {
+		return "product"
+	}
+	// 5 功能设计
 	if strings.Contains(p, "/specs/") || strings.Contains(t, "(spec") ||
 		(strings.Contains(t, "设计") && !strings.Contains(t, "实现")) ||
 		strings.Contains(t, "架构") || strings.Contains(t, "architecture") {
 		return "spec"
 	}
+	// 6 开发计划
 	if strings.Contains(t, "实现计划") || strings.Contains(t, "开发计划") ||
 		(strings.Contains(t, "计划") && !strings.Contains(t, "设计")) {
 		return "plan"
-	}
-	if strings.Contains(p, "/research/") || strings.Contains(t, "调研") ||
-		strings.Contains(t, "探测") || strings.Contains(t, "investigation") {
-		return "research"
 	}
 	return "doc"
 }

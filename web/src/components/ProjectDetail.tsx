@@ -8,7 +8,7 @@ import {
 import { DOC_TYPES, TYPE_LABEL } from '../lib/types'
 import type { Document, Project } from '../lib/types'
 import DocDrawer from './DocDrawer'
-import OverviewView from './views/OverviewView'
+import OverviewView, { StatusEmoji } from './views/OverviewView'
 import RoadmapView from './views/RoadmapView'
 import MindmapView from './views/MindmapView'
 import GanttView from './views/GanttView'
@@ -53,7 +53,10 @@ export default function ProjectDetail({ project, view, onViewChange }: Props) {
                         onClick={() => setOpenDoc(d)}
                         className="text-left text-[13px] text-gray-700 hover:bg-gray-50 rounded px-2 py-1.5 flex items-center gap-2"
                       >
-                        <span className="truncate flex-1">{d.title.slice(0, 18)}{d.title.length > 18 ? '…' : ''}</span>
+                        <span className="truncate flex-1">
+                          <span className="mr-0.5">{StatusEmoji(d.status)}</span>
+                          {d.title.slice(0, 18)}{d.title.length > 18 ? '…' : ''}
+                        </span>
                         <span className="text-[11px] text-gray-400 shrink-0">{d.date || ''}</span>
                       </button>
                     ))}

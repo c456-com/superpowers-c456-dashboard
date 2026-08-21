@@ -1,0 +1,33 @@
+erDiagram
+  PROJECT ||--o{ DOCUMENT : contains
+  DOCUMENT ||--o{ SECTION : has
+  DOCUMENT ||--o{ TASK : has
+  PROJECT ||--o{ ROADMAP_STAGE : has
+
+  PROJECT {
+    string name PK
+    string root
+    string type
+    string status
+  }
+  DOCUMENT {
+    string path PK
+    string title
+    string date
+    string type
+    string status
+    string content
+  }
+  SECTION {
+    int level
+    string title
+  }
+  TASK {
+    string text
+    bool done
+  }
+  ROADMAP_STAGE {
+    string id PK
+    string title
+    string desc
+  }

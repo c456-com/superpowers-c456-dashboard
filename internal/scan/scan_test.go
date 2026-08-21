@@ -50,6 +50,15 @@ func makeFixture(t *testing.T) (root string) {
 	write("docs/2026-08-14-调研报告.md", `# 调研 (research)
 内容。
 `)
+	write("docs/requirements/2026-08-10-customer.md", `# 客户需求 (requirement)
+> 客户要一套标书系统。
+`)
+	write("docs/stories/2026-08-11-import-story.md", `# 用户故事 (story)
+> 作为标书工程师，我想要导入招标 PDF。
+`)
+	write("docs/product/2026-08-12-ux.md", `# 产品设计 (product)
+> 信息架构与交互。
+`)
 	return root
 }
 
@@ -68,6 +77,9 @@ func TestScanTypes(t *testing.T) {
 		"docs/specs/2026-08-15-search-design.md":       "spec",
 		"docs/plans/2026-08-16-implementation-plan.md": "plan",
 		"docs/2026-08-14-调研报告.md":                      "research",
+		"docs/requirements/2026-08-10-customer.md":     "requirement",
+		"docs/stories/2026-08-11-import-story.md":      "story",
+		"docs/product/2026-08-12-ux.md":                "product",
 	}
 	for path, want := range cases {
 		got, ok := byPath[path]
@@ -85,8 +97,8 @@ func TestScanStatsAndTasks(t *testing.T) {
 	root := makeFixture(t)
 	prj := Scan(root, nil, nil)
 
-	if prj.Stats.TotalDocs != 5 {
-		t.Errorf("文档总数 = %d, 期望 5", prj.Stats.TotalDocs)
+	if prj.Stats.TotalDocs != 8 {
+		t.Errorf("文档总数 = %d, 期望 8", prj.Stats.TotalDocs)
 	}
 	if prj.Stats.TasksTotal != 4 {
 		t.Errorf("任务总数 = %d, 期望 4", prj.Stats.TasksTotal)
@@ -137,8 +149,8 @@ func TestScanMetaAndSummary(t *testing.T) {
 func TestCollectSignature(t *testing.T) {
 	root := makeFixture(t)
 	sig1 := CollectSignature(root, nil, nil)
-	if len(sig1) != 5 {
-		t.Errorf("签名文档数 = %d, 期望 5", len(sig1))
+	if len(sig1) != 8 {
+		t.Errorf("签名文档数 = %d, 期望 8", len(sig1))
 	}
 	// 追加一个文档 → 签名变化
 	p := filepath.Join(root, "docs", "2026-08-20-new.md")
@@ -146,8 +158,8 @@ func TestCollectSignature(t *testing.T) {
 		t.Fatal(err)
 	}
 	sig2 := CollectSignature(root, nil, nil)
-	if len(sig2) != 6 {
-		t.Errorf("签名文档数(追加后) = %d, 期望 6", len(sig2))
+	if len(sig2) != 9 {
+		t.Errorf("签名文档数(追加后) = %d, 期望 9", len(sig2))
 	}
 }
 

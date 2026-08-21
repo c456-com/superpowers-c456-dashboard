@@ -1,5 +1,5 @@
 import type { Document, Project } from '../../lib/types'
-import { TYPE_LABEL } from '../../lib/types'
+import { TYPE_LABEL, normalizeStatus } from '../../lib/types'
 
 interface Props {
   project: Project
@@ -64,7 +64,10 @@ export default function OverviewView({ project, onOpen }: Props) {
                 <button key={d.path} onClick={() => onOpen(d)} className="text-left bg-white border border-border rounded-lg p-3.5 hover:border-primary transition-colors cursor-pointer">
                   <div className="font-semibold flex items-center gap-2">
                     <TypeTag type={d.type} />
-                    <span className="truncate">{d.title}</span>
+                    <span className="truncate">
+                      <span title={d.status || '文档'}>{StatusEmoji(d.status)} </span>
+                      {d.title}
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.summary || ''}</div>
                   <div className="text-[11px] text-gray-400 mt-2">
@@ -84,11 +87,14 @@ export default function OverviewView({ project, onOpen }: Props) {
 
 export function TypeTag({ type }: { type: string }) {
   const map: Record<string, string> = {
+    requirement: 'text-rose-600 bg-rose-50',
+    research: 'text-gray-600 bg-gray-100',
+    story: 'text-teal-600 bg-teal-50',
+    product: 'text-fuchsia-600 bg-fuchsia-50',
     spec: 'text-blue-600 bg-blue-50',
+    roadmap: 'text-amber-600 bg-amber-50',
     plan: 'text-green-600 bg-green-50',
     sprint: 'text-violet-600 bg-violet-50',
-    roadmap: 'text-amber-600 bg-amber-50',
-    research: 'text-gray-600 bg-gray-100',
     doc: 'text-gray-600 bg-gray-100',
   }
   return (
@@ -96,4 +102,9 @@ export function TypeTag({ type }: { type: string }) {
       {TYPE_LABEL[type] || type}
     </span>
   )
+}
+
+// 文档状态 → emoji（快速识别已批准/草稿等）
+export function StatusEmoji(status?: string): string {
+  return normalizeStatus(status).emoji
 }
