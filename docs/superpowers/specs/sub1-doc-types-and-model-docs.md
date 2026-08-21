@@ -21,13 +21,17 @@ dashboard 当前只能识别 4+1 类文档（spec/plan/roadmap/sprint/research +
 | 阶段 | 类型代码 | 英文目录 | 中文标签 |
 |------|---------|---------|---------|
 | 客户需求 | `requirement` | `requirements/` | 客户需求 |
+| 调研 | `research` | `research/` | 调研 |
 | 用户故事 | `story` | `stories/` | 用户故事 |
 | 产品设计 | `product` | `product/` | 产品设计 |
 | 功能设计 | `spec` | `specs/` | 功能设计 |
 | 路线图 | `roadmap` | `roadmap/` | 路线图 |
 | 开发计划 | `plan` | `plans/` | 开发计划 |
 | 冲刺 | `sprint` | `sprints/` | 冲刺 |
-| 调研 | `research` | `research/` | 调研 |
+
+> **工作流顺序（首页展示的「开发最佳实践工作流」）**：
+> 客户需求 → 调研 → 用户故事 → 产品设计 → 功能设计 → 路线图 → 开发计划 → 冲刺
+> 调研放在用户故事之上（辉哥定：需求之后先调研，再形成用户故事）。
 
 ### 2. 类型判定扩展（internal/scan/scan.go classify）
 
@@ -37,15 +41,16 @@ dashboard 当前只能识别 4+1 类文档（spec/plan/roadmap/sprint/research +
 - `story`：路径含 `/stories/`，或标题含「用户故事」「story」「user story」
 - `product`：路径含 `/product/`，或标题含「产品设计」「UX」「信息架构」「交互设计」
 - 原有 spec/plan/roadmap/sprint/research 判定保留不变
-- 判定顺序：roadmap → sprint → requirement → story → product → spec → plan → research → doc
-  （requirement/story/product 需在 spec 之前，避免「产品设计」被 spec 误判——因为 spec 判定含「设计」）
+- 判定顺序：roadmap → sprint → requirement → research → story → product → spec → plan → doc
+  - requirement/research/story/product 需在 spec 之前（避免「产品设计」被 spec 误判——spec 判定含「设计」）
+  - research 判定在 requirement 之后（research 目录明确时优先）
 
 ### 3. 前端口径
 
 - `web/src/lib/types.ts`：
   - `TYPE_LABEL` 增加 requirement=客户需求 / story=用户故事 / product=产品设计
   - `DOC_TYPES` 扩展为完整 8 类有序数组
-  - 新增 `TYPE_ORDER`（8 阶段展示顺序：requirement→story→product→spec→roadmap→plan→sprint→research→doc）
+  - 新增 `TYPE_ORDER`（工作流展示顺序：requirement→research→story→product→spec→roadmap→plan→sprint→doc）
 - `docs/models/` 配套维护类型枚举与判定规则
 
 ### 4. 可追溯性元数据
@@ -53,7 +58,15 @@ dashboard 当前只能识别 4+1 类文档（spec/plan/roadmap/sprint/research +
 文档 frontmatter / 引用块支持 `对应需求：` `对应故事：` `对应 Roadmap：` 键
 （parseMeta 已支持任意键，规范用法即生效），为后续 AI 跨阶段串联打基础。
 
-### 5. 回归测试
+### 5. 首页「开发最佳实践工作流」形态（辉哥定）
+
+首页不应只是 8 类文档罗列，而是表达**一条工作流最佳实践**：
+客户端需求 → 调研 → 用户故事 → 产品设计 → 功能设计 → 路线图 → 开发计划 → 冲刺。
+
+- 初始（子项目①范围）先在规格层面锁定 `TYPE_ORDER` 这条工作流顺序；
+- 后续子项目②（多视图 UX）用「卡片 + 工作流连线」的展示形态实现首页（8 阶段卡片按流程串联，每卡片显示该阶段文档数/可点进）。
+
+### 6. 回归测试
 
 `internal/scan/scan_test.go` 增加用例：每种类型造文件名/标题断言 classify 结果正确；
 含边界用例（如「产品设计」不被 spec 误判、`/requirements/` 目录被判定为 requirement）。
