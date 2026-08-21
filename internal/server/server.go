@@ -48,6 +48,9 @@ type Server struct {
 	sugMu         sync.Mutex
 	suggestions   []ai.Suggestion // 最近一次 AI 分析结果
 	suggestionsAt string
+
+	aiAutoMu  sync.Mutex
+	aiLastRun time.Time // 自动触发防抖：距上次运行不足防抖期则跳
 }
 
 // ScanState 目录扫描的实时运行状态。
@@ -522,6 +525,7 @@ func (s *Server) Watch() {
 				s.recompute(loaded)
 				s.broadcast("refresh")
 				slog.Info("watch", "msg", "项目文档变化，已重扫")
+				s.MaybeAutoAnalyse("") // 文档变化自动触发 AI（若已配置，防抖 3 分钟）
 			}
 		}
 	}()

@@ -174,3 +174,64 @@ func hasModelsDir(root string) bool {
 func scanProject(root string) *scan.Project {
 	return scan.Scan(root, nil, nil)
 }
+
+// DebounceAutoMs 自动触发的防抖时长（3 分钟）。
+const DebounceAutoMs = 3 * 60 * 1000
+
+// MaybeAutoAnalyse 文档变化后自动触发 AI 分析（防抖 3 分钟；未配置 AI 则跳过）。
+// 用于 Watch 检测到项目文档变化时调用。取变化项目（或缺省第一个）跑一次 L3 agent。
+func (s *Server) MaybeAutoAnalyse(name string) {
+	s.aiAutoMu.Lock()
+	defer s.aiAutoMu.Unlock()
+	if !s.aiLastRun.IsZero() && time.Since(s.aiLastRun).Milliseconds() < DebounceAutoMs {
+		return // 防抖：距上次运行不足 3 分钟，跳过
+	}
+	cfg, err := ai.LoadConfig(s.authPath)
+	if err != nil || cfg.BaseURL == "" || cfg.Model == "" {
+		return // 未配置 AI，跳过
+	}
+	s.aiLastRun = time.Now()
+
+	// 解析项目根
+	var project, root string
+	if name != "" {
+		s.mu.RLock()
+		root = s.projectRoots[name]
+		s.mu.RUnlock()
+		if root == "" {
+			project, root = name, ""
+		} else {
+			project = name
+		}
+	}
+	if root == "" {
+		s.mu.RLock()
+		for _, p := range s.agg.Projects {
+			root, project = p.Root, p.Name
+			break
+		}
+		s.mu.RUnlock()
+	}
+	if root == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+		defer cancel()
+		s.broadcast(`{"type":"ai","event":"running","project":"` + project + `","auto":true}`)
+		sugs, aerr := runAgentOnce(ctx, cfg, project, root)
+		s.sugMu.Lock()
+		s.suggestionsAt = time.Now().Format("15:04:05")
+		if aerr != nil {
+			s.suggestions = []ai.Suggestion{{
+				Type: "ok", Severity: "warning", Title: "AI 分析失败",
+				Detail: aerr.Error(), Action: "检查 AI 配置后重试",
+			}}
+		} else {
+			s.suggestions = sugs
+		}
+		s.sugMu.Unlock()
+		s.broadcast(`{"type":"ai","event":"done","project":"` + project + `","auto":true}`)
+	}()
+}
