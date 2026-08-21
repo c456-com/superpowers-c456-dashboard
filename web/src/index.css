@@ -7,13 +7,6 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --bg: #f7f7f8;
-  --panel: #ffffff;
-  --border: oklch(0.923 0.003 48.717);
-  --ink: #1a1a1a;
-  --sub: #6b7280;
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-soft: #eff6ff;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);
@@ -26,8 +19,10 @@
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0.001 106.424);
   --muted-foreground: oklch(0.553 0.013 58.071);
+  --accent: oklch(0.97 0.001 106.424);
   --accent-foreground: oklch(0.216 0.006 56.043);
   --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
   --ring: oklch(0.709 0.01 56.259);
   --chart-1: oklch(0.869 0.005 56.366);
@@ -52,10 +47,6 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
