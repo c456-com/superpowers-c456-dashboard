@@ -27,7 +27,9 @@ func ApplyTools() []Tool {
 				Name:        "list_docs",
 				Description: "列出项目某个文档类型的文档（类型：requirement/research/story/product/spec/roadmap/plan/sprint/doc）。调用后你会知道该阶段有哪些文档、各自标题与日期。",
 				Parameters: map[string]interface{}{
-					"type": map[string]interface{}{"type": "string", "description": "文档类型"},
+					"type":       "object",
+					"properties": map[string]interface{}{"type": map[string]interface{}{"type": "string", "description": "文档类型"}},
+					"required":   []string{"type"},
 				},
 			},
 		},
@@ -36,15 +38,21 @@ func ApplyTools() []Tool {
 			Function: ToolSchema{
 				Name:        "read_agents",
 				Description: "读取项目的 AGENTS.md 内容（若存在）。用于判断是否已有开发最佳实践规则。",
-				Parameters:  map[string]interface{}{},
+				Parameters: map[string]interface{}{
+					"type":       "object",
+					"properties": map[string]interface{}{},
+				},
 			},
 		},
 		{
 			Type: "function",
 			Function: ToolSchema{
 				Name:        "check_models",
-				Description: "检查项目是否有 data/models 数据模型目录及 schema.md。返回是否存在。",
-				Parameters:  map[string]interface{}{},
+				Description: "检查项目是否有 docs/models 数据模型目录及 schema.md。返回是否存在。",
+				Parameters: map[string]interface{}{
+					"type":       "object",
+					"properties": map[string]interface{}{},
+				},
 			},
 		},
 	}
@@ -64,7 +72,14 @@ func (tc *ToolContext) ExecuteOne(ctx context.Context, name string, args json.Ra
 		var a struct {
 			Type string `json:"type"`
 		}
-		_ = json.Unmarshal(args, &a)
+		// 部分模型把 arguments 当字符串再编码一次，这里做双重解码兜底
+		if err := json.Unmarshal(args, &a); err != nil || a.Type == "" {
+			var s string
+			if json.Unmarshal(args, &s) == nil {
+				_ = json.Unmarshal([]byte(s), &a)
+			}
+			_ = json.Unmarshal(args, &a)
+		}
 		return tc.listDocs(a.Type), nil
 	case "read_agents":
 		return tc.readAgents(), nil

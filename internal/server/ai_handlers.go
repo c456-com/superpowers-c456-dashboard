@@ -77,7 +77,7 @@ func (s *Server) aiAnalyseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
 		defer cancel()
 		s.broadcast(`{"type":"ai","event":"running","project":"` + project + `"}`)
 		sugs, err := runAgentOnce(ctx, cfg, project, root)
@@ -217,7 +217,7 @@ func (s *Server) MaybeAutoAnalyse(name string) {
 	}
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
 		defer cancel()
 		s.broadcast(`{"type":"ai","event":"running","project":"` + project + `","auto":true}`)
 		sugs, aerr := runAgentOnce(ctx, cfg, project, root)

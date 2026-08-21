@@ -71,7 +71,7 @@ func NewClient(cfg Config) *Client {
 		BaseURL: base,
 		APIKey:  cfg.APIKey,
 		Model:   cfg.Model,
-		HTTP:    &http.Client{Timeout: 120 * time.Second},
+		HTTP:    &http.Client{Timeout: 300 * time.Second},
 	}
 }
 
